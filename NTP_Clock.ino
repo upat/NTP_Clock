@@ -97,6 +97,7 @@ void loop()
   static uint8_t m_data = 0; /* 分   */
   static uint8_t s_data = 0; /* 秒   */
   uint8_t m_div_data = 0;
+  uint32_t millis_count = millis();
 
   /* NTPから取得した時刻が設定済み且つ時刻が更新された時 */
   if( timeNotSet != timeStatus() && now_data != now() )
@@ -149,8 +150,11 @@ void loop()
     }
   }
 
-  /* LCD非更新時:3～5ns、LCD更新時(秒):100ms、起動時:250ms */
-  delay( 100 );
+  /* ESP32+ILI9341(8bit)の起動時に最大250～260ms */
+  while( ( millis() - millis_count ) < 500 )
+  {
+    ; /* loop関数開始から500ms経過するまでループ */
+  }
 }
 
 /* 描画処理関数 */
