@@ -255,11 +255,11 @@ void deepsleep_jdg( uint8_t h_data, uint8_t w_data )
     }
   #endif
     /* deep-sleep */
-    esp_sleep_enable_timer_wakeup( ( uint32_t )( 1800 * 1000 * 1000 ) ); 
+    esp_sleep_enable_timer_wakeup( ( uint32_t )( 1800 * 1000 * 1000 * 1.006 ) ); /* deep-sleepの誤差補正 1.006 */
     esp_deep_sleep_start();
 #elif defined ( ESP8266 )
     /* deep-sleep */
-    ESP.deepSleep( ( uint32_t )( 1800 * 1000 * 1000 ), WAKE_RF_DEFAULT );
+    ESP.deepSleep( ( uint32_t )( 1800 * 1000 * 1000 * 1.006 ), WAKE_RF_DEFAULT ); /* deep-sleepの誤差補正 1.006 */
 #endif
     delay( 3000 ); /* 未到達 */
   }
