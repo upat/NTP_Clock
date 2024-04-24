@@ -25,7 +25,7 @@ String holiday_jdg = "1";
 void     set_display( uint8_t h_data, uint8_t m_data, uint8_t s_data );
 void     read_sensor( void );
 void     adjust_syncinterval( void );
-void     deepsleep_jdg( uint8_t h_data, uint8_t w_data );
+void     deepsleep_jdg( uint8_t h_data, uint8_t w_data, bool flag );
 time_t   getNtpTime( void );
 
 void setup()
@@ -48,15 +48,12 @@ void setup()
     flag_udpbegin_err = 1;
   }
 
-  /* LCD初期化処理 */
-  LcdCommon_init();
-
   /* エラー判定処理 */
   if( 0x00 < err_flag.all_bits )
   {
     /* 初回起動時のwifi接続に失敗するのでリセットをかける */
-	  /* マイコン起動失敗時処理 */
-	  LcdCommon_init_fail( err_flag.all_bits );
+    /* マイコン起動失敗時処理 */
+    LcdCommon_init_fail( err_flag.all_bits );
 
     /* 処理を開始せずソフトウェアリセット */
     delay( 1000 );
@@ -75,7 +72,10 @@ void setup()
     read_sensor();
 
     /* スリープ判定処理 */
-    deepsleep_jdg( hour( now() ), weekday( now() ) );
+    deepsleep_jdg( hour( now() ), weekday( now() ), false );
+
+    /* LCD初期化処理 */
+    LcdCommon_init();
 
     post_buff = ComCommon_post_req( HTTP_REQUEST );
     if( BUFF_LENGTH > post_buff.length() + 1 )
@@ -108,7 +108,7 @@ void loop()
     s_data = second( now_data );
 
     /* スリープ判定処理 */
-    deepsleep_jdg( h_data, w_data );
+    deepsleep_jdg( h_data, w_data, true );
 
     /* 画面表示 */
     set_display( h_data, m_data, s_data );
@@ -234,7 +234,7 @@ void adjust_syncinterval( void )
 }
 
 /* 平日の日中にdeep-sleepを行う判定処理 */
-void deepsleep_jdg( uint8_t h_data, uint8_t w_data )
+void deepsleep_jdg( uint8_t h_data, uint8_t w_data, bool flag )
 {
   if( ( 8 < h_data )  &&
       ( 18 > h_data ) &&
@@ -243,8 +243,13 @@ void deepsleep_jdg( uint8_t h_data, uint8_t w_data )
       ( String( "0" ) == holiday_jdg ) )
   // if( 58 == minute( now() ) && 0 == second( now() ) && String( "0" ) == holiday_jdg )
   {
-    /* LCDスリープ処理 */
-    LcdCommon_sleep();
+    /* 起動時：false、通常動作中：true */
+    /* begin()前にSPIコマンドを送るとリセットループする対策 */
+    if( flag )
+    {
+      /* LCDスリープ処理 */
+      LcdCommon_sleep();
+    }
 #if defined ( ESP32 )
   #if !defined ( ESP32_8BIT )
     /* サーバー停止処理 */

@@ -76,6 +76,13 @@ uint8_t ComCommon_wifi_init( void )
     /* 失敗時 */
     return 1;
   }
+  
+  /* wi-fi出力強度設定(『4dBm ≒ Bluetooth Class2相当』を参考に設定) */
+  if( !WiFi.setTxPower( WIFI_POWER_7dBm ) )
+  {
+    /* 失敗時 */
+    return 1;
+  }
 
   /* wi-fiの接続待ち(500ms*10回) */
   for( uint8_t loop = 0; loop < 10; loop++ )

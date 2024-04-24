@@ -59,6 +59,9 @@ void LcdCommon_init( void )
 /*******************************************************************/
 void LcdCommon_init_fail( uint8_t flag )
 {
+  /* LCD初期化処理 */
+  LcdCommon_init();
+  
 #if defined ( ESP32 )
   lcd.fillScreen( LCD_COMMON_BLACK ); /* 画面表示のクリア */
   lcd.setTextSize( 3 );               /* 表示する文字サイズ */
