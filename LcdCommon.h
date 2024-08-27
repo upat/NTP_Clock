@@ -7,6 +7,9 @@
 #include <Adafruit_GFX.h>
 
 #if defined ( ESP32_8BIT )
+  /* Arduino core for the ESP32 v3.*.*でMCUFRIEND_kbv v3.0.0を使用する場合、mcufriend_shield.hの1026行目に以下を追加 */
+  /* #include "hal/gpio_ll.h" */
+  /* 参考：https://github.com/prenticedavid/MCUFRIEND_kbv/issues/255 */
   #include <MCUFRIEND_kbv.h>
   // #include <TouchScreen.h> /* 使用予定なし */
 #elif defined ( ESP32 )

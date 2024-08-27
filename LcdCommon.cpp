@@ -1,20 +1,20 @@
 #include "LcdCommon.h"
 
 /* 変数宣言 */
-const char week_day[7][8] = { "(SUN)", "(MON)", "(TUE)", "(WED)", "(THU)", "(FRI)", "(SAT)" };
+static const char week_day[7][8] = { "(SUN)", "(MON)", "(TUE)", "(WED)", "(THU)", "(FRI)", "(SAT)" };
 
 /* 関数宣言 */
 static uint16_t str_position( uint16_t str_length, uint16_t unit_length );
 static uint16_t count_char( char *str, uint8_t str_size );
 
 #if defined ( ESP32_8BIT )
-MCUFRIEND_kbv lcd;
-/* TouchScreen ts(XP, YP, XM, YM, 300); */
+static MCUFRIEND_kbv lcd;
+/* TouchScreen ts( XP, YP, XM, YM, 300 ); */
 // TouchScreen ts( 27, 4, 15, 14, 300 ); /* 使用予定なし */
 #elif defined ( ESP32 )
-Adafruit_ILI9341 lcd = Adafruit_ILI9341( 5, 17, 16 ); /* CS, DC, RESET */
+static Adafruit_ILI9341 lcd = Adafruit_ILI9341( 5, 17, 16 ); /* CS, DC, RESET */
 #elif defined ( ESP8266 )
-Adafruit_SSD1306 lcd( 128, 64, &Wire, -1 ); /* 横解像度, 縦解像度, RESET(無し) */
+static Adafruit_SSD1306 lcd( 128, 64, &Wire, -1 ); /* 横解像度, 縦解像度, RESET(無し) */
 #endif
 
 /*******************************************************************/
@@ -35,9 +35,8 @@ void LcdCommon_init( void )
   lcd.setTextColor( LCD_COMMON_ORANGE, LCD_COMMON_BLACK ); /* 表示する文字色(同じ場所へ表示するので背景色も設定) */
 #elif defined ( ESP32 )
   /* LCDバックライトのPWM出力 */
-  ledcSetup( 0, 12800, 8 ); /* ch0のPWM設定 */
-  ledcAttachPin( A4, 0 );   /* IO32にch0を割り当て */
-  ledcWrite( 0, 128 );      /* ch0からPWM出力 */
+  ledcAttach( A4, 6400, 8 ); /* IO32(A4)から6.4kHz、8bit分解能でPWM出力設定 */
+  ledcWrite( A4, 128 );      /* IO32(A4)からduty50%でPWM出力 */
   /* 制御開始 */
   lcd.begin();
   lcd.setRotation( 1 );
