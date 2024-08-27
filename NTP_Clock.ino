@@ -251,14 +251,6 @@ void deepsleep_jdg( uint8_t h_data, uint8_t w_data, bool flag )
       LcdCommon_sleep();
     }
 #if defined ( ESP32 )
-  #if !defined ( ESP32_8BIT )
-    /* サーバー停止処理 */
-    ( void )ComCommon_post_req( String( ( int )temp ) + "℃"  ); /* スリープ時の室温 */
-    if( 31 < ( int )temp )
-    {
-      ( void )ComCommon_post_req( "temp_alert" ); /* 室温が高温の場合、サーバー停止要求 */
-    }
-  #endif
     /* deep-sleep */
     esp_sleep_enable_timer_wakeup( ( uint32_t )( 1800 * 1000 * 1000 * 1.006 ) ); /* deep-sleepの誤差補正 1.006 */
     esp_deep_sleep_start();
