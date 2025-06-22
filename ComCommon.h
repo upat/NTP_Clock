@@ -66,7 +66,7 @@ extern _FLAG err_flag;
 extern byte     packetBuffer[NTP_PACKET_SIZE];
 
 /* 関数定義 */
-extern void     ComCommon_flag_init(void);
-extern String   ComCommon_post_req(String request_data);
-extern void     ComCommon_wifi_init(void);
-extern void     sendNTPpacket(const char* address);
+extern void ComCommon_flag_init(void);
+extern void ComCommon_post_req(char* response_data, String request_data);
+extern void ComCommon_wifi_init(void);
+extern void sendNTPpacket(const char* address);

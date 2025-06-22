@@ -14,13 +14,12 @@ float temp = 0.0;
 time_t now_data = 0;
 /* httpリクエスト用 */
 char http_buff[BUFF_LENGTH] = {};
-String post_buff = "";
 
 /* 初回起動時に0分0秒でNTP更新周期を再設定するフラグ */
 bool adjustsync_flg = true;
 
 /* 休日の判定 1:スリープ不可, 0:スリープ許可 */
-String holiday_jdg = "1";
+char holiday_jdg[BUFF_LENGTH] = "1";
 
 void     set_display( uint8_t h_data, uint8_t m_data, uint8_t s_data );
 void     read_sensor( void );
@@ -66,7 +65,7 @@ void setup()
     setSyncInterval( 3600 );       /* 時刻補正を行う周期設定(秒) 後で調整 */
 
     /* 休日か判定 */
-    holiday_jdg = ComCommon_post_req( "datelist" );
+    ComCommon_post_req( holiday_jdg, "datelist" );
 
     /* 温湿度データの取得(初回) */
     read_sensor();
@@ -77,15 +76,7 @@ void setup()
     /* LCD初期化処理 */
     LcdCommon_init();
 
-    post_buff = ComCommon_post_req( HTTP_REQUEST );
-    if( BUFF_LENGTH > post_buff.length() + 1 )
-    {
-      post_buff.toCharArray( http_buff, post_buff.length() + 1 );
-    }
-    else
-    {
-      sprintf( http_buff, "%s", HTTP_DEFAULT );
-    }
+    ComCommon_post_req( http_buff, HTTP_REQUEST );
   }
 }
 
@@ -125,15 +116,7 @@ void loop()
     /* 毎時一桁目が2分の時、データ取得 */
     if( ( 2 == m_div_data ) && ( 0 == s_data ) )
     {
-      post_buff = ComCommon_post_req( HTTP_REQUEST );
-      if( BUFF_LENGTH > post_buff.length() + 1 )
-      {
-        post_buff.toCharArray( http_buff, post_buff.length() + 1 );
-      }
-      else
-      {
-        sprintf( http_buff, "%s", HTTP_DEFAULT );
-      }
+      ComCommon_post_req( http_buff, HTTP_REQUEST );
     }
 
     /* 日付が変わっていたら休日か判定 */
@@ -240,8 +223,8 @@ void deepsleep_jdg( uint8_t h_data, uint8_t w_data, bool flag )
       ( 18 > h_data ) &&
       ( 1 < w_data )  &&
       ( 7 > w_data )  &&
-      ( String( "0" ) == holiday_jdg ) )
-  // if( 58 == minute( now() ) && 0 == second( now() ) && String( "0" ) == holiday_jdg )
+      ( 0 == atoi( holiday_jdg ) ) )
+  //if( 10 == minute( now() ) && 0 == second( now() ) && 1 == atoi( holiday_jdg ) )
   {
     /* 起動時：false、通常動作中：true */
     /* begin()前にSPIコマンドを送るとリセットループする対策 */

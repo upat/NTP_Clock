@@ -27,18 +27,17 @@ void ComCommon_flag_init(void)
 /* 戻り値　：HTTPレスポンス                                        */
 /* 備考　　：なし                                                  */
 /*******************************************************************/
-String ComCommon_post_req(String request_data)
+void ComCommon_post_req(char* response_data, String request_data)
 {
   HTTPClient http;
-  String res_str = "";
   int httpCode;
   uint8_t byte_count = 0;
 
   /* リクエストに対応した初期値のセット */
   if (-1 < request_data.indexOf("date")) {       /* datelistリクエスト */
-    res_str = "1";
+    strcpy(response_data, "1");
   } else if (-1 < request_data.indexOf("jma")) { /* get_jmaリクエスト */
-    res_str = HTTP_DEFAULT;
+    strcpy(response_data, HTTP_DEFAULT);
   }
 
   if (WiFi.status() != WL_CONNECTED) { /* wi-fi接続が切れていた場合再接続 */
@@ -53,24 +52,29 @@ String ComCommon_post_req(String request_data)
     httpCode = http.POST(request_data);
 
     if (httpCode == HTTP_CODE_OK) {
-      res_str = ""; /* 初期値クリア */
       delay(20);    /* 環境依存でPOSTリクエストの後20ms待ち */
       WiFiClient *stream = http.getStreamPtr();
       
       /* 受信データが1byte以上あり */
       while ((0 < stream->available())
-          && (BUFF_LENGTH > byte_count)) {
-        char c_temp = stream->read(); /* 1byteずつ読み出し */
-        res_str += c_temp;            /* 結合 */
-        byte_count++;                 /* 受信バイト数をカウント(最大24回想定) */
+          && ((BUFF_LENGTH - 2) > byte_count)) { /* 配列インデックス+終端文字の分だけ引く */
+        char c_tmp = stream->read();             /* 1byteずつ読み出す */
+        if ((0x20 > c_tmp)
+         || (0x7e < c_tmp)) {                    /* ascii文字範囲外の場合はハイフンに置き換え */
+          response_data[byte_count] = '-';
+        } else {
+          response_data[byte_count] = c_tmp;
+        }
+        byte_count++;                            /* 受信バイト数をカウント(最大22回想定) */
         delayMicroseconds(500);
       }
+      response_data[byte_count] = '\0';          /* 終端文字 */
     }
     /* 通信終了 */
     http.end();
   }
 
-  return res_str;
+  return;
 }
 
 /*******************************************************************/
