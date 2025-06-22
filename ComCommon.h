@@ -14,14 +14,14 @@
 #include "CommonSetting.h"
 
 typedef struct flag_bits {
-  uint8_t bit01 : 1;
-  uint8_t bit02 : 1;
-  uint8_t bit03 : 1;
-  uint8_t bit04 : 1;
-  uint8_t bit05 : 1;
-  uint8_t bit06 : 1;
-  uint8_t bit07 : 1;
-  uint8_t bit08 : 1;
+  uint8_t bit1 : 1;
+  uint8_t bit2 : 1;
+  uint8_t bit3 : 1;
+  uint8_t bit4 : 1;
+  uint8_t bit5 : 1;
+  uint8_t bit6 : 1;
+  uint8_t bit7 : 1;
+  uint8_t bit8 : 1;
 } _FB;
 
 /* フラグ用共用体 */
@@ -36,8 +36,8 @@ extern WiFiUDP UDP_NTP; /* NTP通信用 */
 // extern _FLAG flag; /* 未使用 */
 extern _FLAG err_flag;
 
-#define flag_wifiinit_err ( err_flag.fb.bit08 ) /* wifi接続エラー判定フラグ */
-#define flag_udpbegin_err ( err_flag.fb.bit07 ) /* udp接続エラー判定フラグ */
+#define flag_wifiinit_err (err_flag.fb.bit8) /* wifi接続エラー判定フラグ */
+#define flag_udpbegin_err (err_flag.fb.bit7) /* udp接続エラー判定フラグ */
 
 #define TIME_SERVER     "ntp.nict.jp" /* NTPサーバーのドメイン名(IP指定は非推奨) */
 #define NTP_PORT        5000          /* NTPサーバーとのUDP通信ポート */
@@ -66,7 +66,7 @@ extern _FLAG err_flag;
 extern byte     packetBuffer[NTP_PACKET_SIZE];
 
 /* 関数定義 */
-extern void     ComCommon_flag_init( void );
-extern String   ComCommon_post_req( String request_data );
-extern uint8_t  ComCommon_wifi_init( void );
-extern void     sendNTPpacket( const char* address );
+extern void     ComCommon_flag_init(void);
+extern String   ComCommon_post_req(String request_data);
+extern void     ComCommon_wifi_init(void);
+extern void     sendNTPpacket(const char* address);

@@ -33,19 +33,19 @@ void setup()
   /* フラグ初期化 */
   ComCommon_flag_init();
 
-  // Serial.begin( SERIAL_SPEED );
+  //Serial.begin( SERIAL_SPEED ); /* デバッグ用出力 */
   
   /* 温湿度センサーの開始 */
   dht.begin();
 
   /* wi-fi通信の開始 */
-  flag_wifiinit_err = ComCommon_wifi_init();
+  ComCommon_wifi_init();
 
   /* UDP通信の開始 */
-  if( !UDP_NTP.begin( NTP_PORT ) )
+  if( UDP_NTP.begin( NTP_PORT ) )
   {
-    /* 失敗時 */
-    flag_udpbegin_err = 1;
+    /* 成功時 */
+    flag_udpbegin_err = 0;
   }
 
   /* エラー判定処理 */
