@@ -23,11 +23,11 @@ void ComCommon_flag_init(void)
 
 /*******************************************************************/
 /* 処理内容：HTTPリクエスト処理                                    */
-/* 引数　　：POSTメソッドで渡す文字列                              */
-/* 戻り値　：HTTPレスポンス                                        */
+/* 引数　　：レスポンス受信用配列、リクエスト用文字列              */
+/* 戻り値　：なし                                                  */
 /* 備考　　：なし                                                  */
 /*******************************************************************/
-void ComCommon_post_req(char* response_data, String request_data)
+void ComCommon_post_req(char *response_data, String request_data)
 {
   HTTPClient http;
   int httpCode;
@@ -97,7 +97,7 @@ void ComCommon_wifi_init(void)
   /* wifiの接続待ち(1000ms*15回) */
   for (uint8_t ms_cnt = 0; ms_cnt < 15; ms_cnt++) {
     delay(1000);
-    if(WiFi.status() == WL_CONNECTED) { /* 平均5～7回で成功 */
+    if (WiFi.status() == WL_CONNECTED) { /* 平均5～7回で成功 */
       /* 接続できたらフラグクリアしてループ終了 */
       flag_wifiinit_err = 0;
       return;
@@ -113,7 +113,7 @@ void ComCommon_wifi_init(void)
 
 /*** Timeライブラリのサンプルコードから移植 ***/
 // send an NTP request to the time server at the given address
-void sendNTPpacket(const char* address)
+void sendNTPpacket(const char *address)
 {
   // set all bytes in the buffer to 0
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
