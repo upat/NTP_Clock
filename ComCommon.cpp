@@ -1,25 +1,13 @@
 #include "ComCommon.h"
 
-WiFiUDP UDP_NTP;
+static WiFiUDP UDP_NTP;
 
 /* 共用体宣言 */
-// _FLAG flag; /* 未使用 */
 _FLAG err_flag;
-
 /* 変数宣言 */
-byte packetBuffer[NTP_PACKET_SIZE];
-
-/*******************************************************************/
-/* 処理内容：汎用フラグ初期化処理                                  */
-/* 引数　　：なし                                                  */
-/* 戻り値　：なし                                                  */
-/* 備考　　：なし                                                  */
-/*******************************************************************/
-void ComCommon_flag_init(void)
-{
-  // flag.all_bits = 0x00; /* 未使用 */
-  err_flag.all_bits = 0xC0; /* フラグクリアは各制御で行う */
-}
+static byte packetBuffer[NTP_PACKET_SIZE];
+/* 関数宣言 */
+static void sendNTPpacket(const char *address);
 
 /*******************************************************************/
 /* 処理内容：HTTPリクエスト処理                                    */
@@ -42,7 +30,7 @@ void ComCommon_post_req(char *response_data, String request_data)
 
   if (WiFi.status() != WL_CONNECTED) { /* wi-fi接続が切れていた場合再接続 */
       WiFi.disconnect();
-      WiFi.reconnect(); /* 次回の通信は10分後になるため待ち処理は未実施 */
+      WiFi.reconnect();                /* 次回の通信は10分後になるため待ち処理は未実施 */
   } else {
     /* タイムアウト時間の設定(ms) */
     http.setTimeout(100);
@@ -51,7 +39,7 @@ void ComCommon_post_req(char *response_data, String request_data)
     http.addHeader("Content-Type", "application/text");
     httpCode = http.POST(request_data);
 
-    if (httpCode == HTTP_CODE_OK) {
+    if (HTTP_CODE_OK == httpCode) {
       delay(20);    /* 環境依存でPOSTリクエストの後20ms待ち */
       WiFiClient *stream = http.getStreamPtr();
       
@@ -78,42 +66,68 @@ void ComCommon_post_req(char *response_data, String request_data)
 }
 
 /*******************************************************************/
-/* 処理内容：Wi-Fi初期化処理                                       */
+/* 処理内容：通信初期化・開始処理                                  */
 /* 引数　　：なし                                                  */
 /* 戻り値　：なし                                                  */
 /* 備考　　：なし                                                  */
 /*******************************************************************/
-void ComCommon_wifi_init(void)
+void ComCommon_init(void)
 {
-  /* 子機側に設定 */
-  WiFi.mode(WIFI_STA);
-  
-  if ((!WiFi.begin(AP_SSID, AP_PASS))        /* wifi接続 */
-   && (!WiFi.setTxPower(WIFI_POWER_7dBm))) { /* wifi出力強度設定(『4dBm ≒ Bluetooth Class2相当』を参考に設定) */
-    /* 失敗時フラグクリアをしない */
-    return;
-  }
-  
-  /* wifiの接続待ち(1000ms*15回) */
-  for (uint8_t ms_cnt = 0; ms_cnt < 15; ms_cnt++) {
-    delay(1000);
-    if (WiFi.status() == WL_CONNECTED) { /* 平均5～7回で成功 */
-      /* 接続できたらフラグクリアしてループ終了 */
-      flag_wifiinit_err = 0;
-      return;
-    } else {
-      /* 1s毎に切断後再接続 */
-      WiFi.disconnect();
-      WiFi.reconnect();
+  //Serial.begin( SERIAL_SPEED ); /* デバッグ用シリアル出力 */
+  err_flag.all_bits = 0xC0;       /* エラーフラグ(クリアは各制御で行う) */
+
+  /* wifi通信の開始 */
+  if ((WiFi.mode(WIFI_STA))                           /* 子機側に設定 */
+   && (WiFi.begin(AP_SSID, AP_PASS))                  /* wifi接続 */
+   && (WiFi.setTxPower(WIFI_POWER_7dBm))) {           /* wifi出力強度設定(『4dBm ≒ Bluetooth Class2相当』を参考に設定) */
+    for (uint8_t ms_cnt = 0; ms_cnt < 15; ms_cnt++) { /* wifiの接続待ち(1000ms*15回) */
+      delay(1000);
+      if (WiFi.status() == WL_CONNECTED) {            /* 平均5～7回で成功 */
+        flag_wifiinit_err = 0;                        /* 接続できたらフラグクリアしてループ終了 */
+        break;
+      } else {
+        /* 1s毎に切断後再接続 */
+        WiFi.disconnect();
+        WiFi.reconnect();
+      }
     }
+  }
+
+  /* NTP用UDP通信の開始 */
+  if (UDP_NTP.begin(NTP_PORT)) {
+    flag_udpbegin_err = 0; /* 成功時 */
   }
   
   return;
 }
 
 /*** Timeライブラリのサンプルコードから移植 ***/
+time_t getNtpTime()
+{
+  while (UDP_NTP.parsePacket() > 0); // discard any previously received packets
+  // Serial.println( "Transmit NTP Request" );
+  sendNTPpacket(TIME_SERVER);
+  uint32_t beginWait = millis();
+  while (millis() - beginWait < 1500) {
+    int size = UDP_NTP.parsePacket();
+    if (size >= NTP_PACKET_SIZE) {
+      // Serial.println( "Receive NTP Response" );
+      UDP_NTP.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
+      unsigned long secsSince1900;
+      // convert four bytes starting at location 40 to a long integer
+      secsSince1900 =  (unsigned long)packetBuffer[40] << 24;
+      secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
+      secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
+      secsSince1900 |= (unsigned long)packetBuffer[43];
+      return secsSince1900 - 2208988800UL + TIME_ZONE * 3600;
+    }
+  }
+  // Serial.println("No NTP Response :-(");
+  return 0; // return 0 if unable to get the time
+}
+
 // send an NTP request to the time server at the given address
-void sendNTPpacket(const char *address)
+static void sendNTPpacket(const char *address)
 {
   // set all bytes in the buffer to 0
   memset(packetBuffer, 0, NTP_PACKET_SIZE);

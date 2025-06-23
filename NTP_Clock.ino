@@ -25,32 +25,18 @@ void     set_display( uint8_t h_data, uint8_t m_data, uint8_t s_data );
 void     read_sensor( void );
 void     adjust_syncinterval( void );
 void     deepsleep_jdg( uint8_t h_data, uint8_t w_data, bool flag );
-time_t   getNtpTime( void );
 
 void setup()
 {
-  /* フラグ初期化 */
-  ComCommon_flag_init();
-
-  //Serial.begin( SERIAL_SPEED ); /* デバッグ用出力 */
-  
   /* 温湿度センサーの開始 */
   dht.begin();
-
-  /* wi-fi通信の開始 */
-  ComCommon_wifi_init();
-
-  /* UDP通信の開始 */
-  if( UDP_NTP.begin( NTP_PORT ) )
-  {
-    /* 成功時 */
-    flag_udpbegin_err = 0;
-  }
+  /* 通信初期化・開始処理 */
+  ComCommon_init();
 
   /* エラー判定処理 */
   if( 0x00 < err_flag.all_bits )
   {
-    /* 初回起動時のwifi接続に失敗するのでリセットをかける */
+    /* 通信接続失敗時にリセットをかける */
     /* マイコン起動失敗時処理 */
     LcdCommon_init_fail( err_flag.all_bits );
 
@@ -66,16 +52,14 @@ void setup()
 
     /* 休日か判定 */
     ComCommon_post_req( holiday_jdg, "datelist" );
-
-    /* 温湿度データの取得(初回) */
-    read_sensor();
-
     /* スリープ判定処理 */
     deepsleep_jdg( hour( now() ), weekday( now() ), false );
 
     /* LCD初期化処理 */
     LcdCommon_init();
-
+    /* 温湿度データの取得(初回) */
+    read_sensor();
+    /* データ取得 */
     ComCommon_post_req( http_buff, HTTP_REQUEST );
   }
 }
@@ -243,29 +227,4 @@ void deepsleep_jdg( uint8_t h_data, uint8_t w_data, bool flag )
 #endif
     delay( 3000 ); /* 未到達 */
   }
-}
-
-/*** Timeライブラリのサンプルコードから移植 ***/
-time_t getNtpTime()
-{
-  while ( UDP_NTP.parsePacket() > 0 ) ; // discard any previously received packets
-  // Serial.println( "Transmit NTP Request" );
-  sendNTPpacket( TIME_SERVER );
-  uint32_t beginWait = millis();
-  while ( millis() - beginWait < 1500 ) {
-    int size = UDP_NTP.parsePacket();
-    if ( size >= NTP_PACKET_SIZE ) {
-      // Serial.println( "Receive NTP Response" );
-      UDP_NTP.read( packetBuffer, NTP_PACKET_SIZE );  // read packet into the buffer
-      unsigned long secsSince1900;
-      // convert four bytes starting at location 40 to a long integer
-      secsSince1900 =  ( unsigned long )packetBuffer[40] << 24;
-      secsSince1900 |= ( unsigned long )packetBuffer[41] << 16;
-      secsSince1900 |= ( unsigned long )packetBuffer[42] << 8;
-      secsSince1900 |= ( unsigned long )packetBuffer[43];
-      return secsSince1900 - 2208988800UL + TIME_ZONE * 3600;
-    }
-  }
-  // Serial.println("No NTP Response :-(");
-  return 0; // return 0 if unable to get the time
 }

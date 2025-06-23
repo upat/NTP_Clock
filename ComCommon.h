@@ -31,9 +31,6 @@ typedef union {
 } _FLAG;
 
 /* 変数定義 */
-extern WiFiUDP UDP_NTP; /* NTP通信用 */
-
-// extern _FLAG flag; /* 未使用 */
 extern _FLAG err_flag;
 
 #define flag_wifiinit_err (err_flag.fb.bit8) /* wifi接続エラー判定フラグ */
@@ -63,10 +60,7 @@ extern _FLAG err_flag;
 #define HTTP_DEFAULT  "---%  ---.-" /* ESP8266用HTTP受信データ初期値 */
 #endif
 
-extern byte     packetBuffer[NTP_PACKET_SIZE];
-
 /* 関数定義 */
-extern void ComCommon_flag_init(void);
-extern void ComCommon_post_req(char *response_data, String request_data);
-extern void ComCommon_wifi_init(void);
-extern void sendNTPpacket(const char *address);
+extern void   ComCommon_post_req(char *response_data, String request_data);
+extern void   ComCommon_init(void);
+extern time_t getNtpTime(void);
