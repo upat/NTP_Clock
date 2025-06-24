@@ -18,8 +18,8 @@ class TimeData {
     uint8_t min_dig;    /* minuteの1桁目の数値 */
     uint8_t hour_dig;   /* hourが1桁なら1それ以外0 */
     bool    sec_updflg; /* 秒更新フラグ */
-    bool    min_updflg; /* 分更新フラグ */
-    bool    day_updflg; /* 日更新フラグ */
+    bool    min_updflg; /* 分更新フラグ 基本false、必要な時のみtrue */
+    bool    day_updflg; /* 日更新フラグ 基本false、必要な時のみtrue */
 
     /* 初回処理関数 */
     void ntp_init(void) {
@@ -33,11 +33,11 @@ class TimeData {
     void time_check(void) {
       if ((timeStatus() != timeNotSet) && (now() != _now)) {
         sec_updflg = true;
+        min_updflg = false;
+        day_updflg = false;
         _time_update();
       } else {
         sec_updflg = false;
-        min_updflg = false;
-        day_updflg = false;
       }
     }
   private:
@@ -112,6 +112,7 @@ void loop()
 {
   uint32_t millis_count = millis(); /* 周期管理用 */
   char draw_data[BUFF_LENGTH] = {}; /* 表示文字列を格納する配列 */
+  static bool isnotfirst = false;
 
   /* NTPから取得した時刻が設定済み且つ時刻が更新された時 */
   timeData.time_check();
@@ -124,8 +125,11 @@ void loop()
       /* 日付描画処理 */
       sprintf(draw_data, DAY_FORMAT, timeData.year_d, timeData.month_d, timeData.day_d);
       LcdCommon_draw_date(draw_data, timeData.weekday_d);
-      /* 休日判定結果取得 */
-      ComCommon_post_req(holiday_jdg, "datelist");
+      /* 休日判定結果取得(初回のみsetup()で実施済みのため処理しない) */
+      if (isnotfirst) {
+        ComCommon_post_req(holiday_jdg, "datelist");
+      }
+      isnotfirst = true;
     }
     /* 1分毎タスク処理 */
     if (timeData.min_updflg) {
