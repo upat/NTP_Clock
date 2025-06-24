@@ -20,17 +20,17 @@ ESP系マイコンと画面表示モジュール、温湿度センサーモジ�
     - SSD1306(I2C)
 - 温湿度センサー
     - DHT11
-- Arduino IDE 2.2.1(使用ライブラリ)
+- Arduino IDE 2.3.6(使用ライブラリ)
     - ESP32-DevKitC V2 + ILI9341(SPI) + DHT11 使用時
-        - Adafruit_GFX_Library
-        - Adafruit_ILI9341
-        - DHT_sensor_library
-        - Time
+        - Adafruit_GFX_Library 1.12.1
+        - Adafruit_ILI9341 1.6.2
+        - DHT_sensor_library 1.4.6
+        - Time(Arduino Time Library) 1.6.1
     - ESP32-DevKitC V2 + ILI9341(8bitパラレル) + DHT11 使用時
-        - Adafruit_GFX_Library
-        - MCUFRIEND_kbv
-        - DHT_sensor_library
-        - Time
+        - Adafruit_GFX_Library 1.12.1
+        - MCUFRIEND_kbv 3.0.0-Release
+        - DHT_sensor_library 1.4.6
+        - Time(Arduino Time Library) 1.6.1
     - WeMos D1 + SSD1306(I2C) + DHT11 使用時
         - Adafruit_GFX_Library
         - Adafruit_SSD1306
