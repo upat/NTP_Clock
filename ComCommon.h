@@ -40,7 +40,6 @@ extern _FLAG err_flag;
 #define NTP_PORT        5000          /* NTPサーバーとのUDP通信ポート */
 #define NTP_PACKET_SIZE 48            /* NTPサーバーとの通信で使用するパケットサイズ */
 #define TIME_ZONE       9             /* タイムゾーンの設定(日本なら9) */
-#define UPDATE_MIN_PRE  59            /* 1分経過直前の秒の値 */
 #define BUFF_LENGTH     24            /* 受信バッファサイズ */
 
 #if defined ( ESP32_8BIT )

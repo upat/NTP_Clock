@@ -47,8 +47,7 @@ void ComCommon_post_req(char *response_data, String request_data)
       while ((0 < stream->available())
           && ((BUFF_LENGTH - 2) > byte_count)) { /* 配列インデックス+終端文字の分だけ引く */
         char c_tmp = stream->read();             /* 1byteずつ読み出す */
-        if ((0x20 > c_tmp)
-         || (0x7e < c_tmp)) {                    /* ascii文字範囲外の場合はハイフンに置き換え */
+        if ((0x20 > c_tmp) || (0x7e < c_tmp)) {  /* ascii文字範囲外の場合はハイフンに置き換え */
           response_data[byte_count] = '-';
         } else {
           response_data[byte_count] = c_tmp;
@@ -73,7 +72,7 @@ void ComCommon_post_req(char *response_data, String request_data)
 /*******************************************************************/
 void ComCommon_init(void)
 {
-  //Serial.begin( SERIAL_SPEED ); /* デバッグ用シリアル出力 */
+  //Serial.begin(SERIAL_SPEED);   /* デバッグ用シリアル出力 */
   err_flag.all_bits = 0xC0;       /* エラーフラグ(クリアは各制御で行う) */
 
   /* wifi通信の開始 */
