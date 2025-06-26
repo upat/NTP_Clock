@@ -2,7 +2,6 @@
 #include "ComCommon.h"
 #include "LcdCommon.h"
 
-#include <DHT.h>
 #include <TimeLib.h>
 
 /* Timeライブラリから取得したデータを管理するクラス */
@@ -69,7 +68,6 @@ class TimeData {
     }
 };
 static TimeData timeData;
-static DHT dht(DHT_PIN, DHT11);
 
 static char http_buff[BUFF_LENGTH] = {};    /* httpリクエスト用 */
 static char holiday_jdg[BUFF_LENGTH] = "1"; /* 休日の判定 1:スリープ不可, 0:スリープ許可 */
@@ -78,8 +76,6 @@ static void deepsleep_jdg(void);
 
 void setup()
 {
-  /* 温湿度センサーの開始 */
-  dht.begin();
   /* 通信初期化・開始処理 */
   ComCommon_init();
 

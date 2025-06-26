@@ -6,6 +6,7 @@ static WiFiUDP UDP_NTP;
 _FLAG err_flag;
 /* 変数宣言 */
 static byte packetBuffer[NTP_PACKET_SIZE];
+DHT dht(DHT_PIN, DHT11);
 /* 関数宣言 */
 static void sendNTPpacket(const char *address);
 
@@ -96,6 +97,9 @@ void ComCommon_init(void)
   if (UDP_NTP.begin(NTP_PORT)) {
     flag_udpbegin_err = 0; /* 成功時 */
   }
+
+  /* 温湿度センサとの通信開始 */
+  dht.begin();
   
   return;
 }
