@@ -155,7 +155,7 @@ void LcdCommon_draw_weather(char *http_buff, char *sensor_data, uint8_t buff_len
   /* 温度単位をそれっぽく表示(文字サイズ:2) */
   lcd.setCursor(http_cursor + http_strlen + 6, 70);
   lcd.println("C");
-  lcd.fillRect(http_cursor + http_strlen, 70, 4, 4, LCD_COMMON_BLACK);
+  lcd.fillRect(http_cursor + http_strlen, 70, 4, 4, LCD_COMMON_DARKTURQUOISE);
 
   /* 温湿度センサーのデータを描画(文字サイズ:3) */
   lcd.setTextSize(3);
@@ -165,7 +165,7 @@ void LcdCommon_draw_weather(char *http_buff, char *sensor_data, uint8_t buff_len
   /* 温度単位をそれっぽく表示(文字サイズ:3) */
   lcd.setCursor(sensor_cursor + sensor_strlen + 8, 96);
   lcd.println("C");
-  lcd.fillRect(sensor_cursor + sensor_strlen, 96, 6, 6, LCD_COMMON_BLACK);
+  lcd.fillRect(sensor_cursor + sensor_strlen, 96, 6, 6, LCD_COMMON_DARKTURQUOISE);
 
   lcd.setTextColor(LCD_COMMON_DEEPPINK, LCD_COMMON_BLACK); /* 文字色・文字背景色設定 */
 #elif defined (ESP8266)
