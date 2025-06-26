@@ -6,15 +6,15 @@
 #include <SPI.h>
 #include <Adafruit_GFX.h>
 
-#if defined ( ESP32_8BIT )
+#if defined (ESP32_8BIT)
   /* Arduino core for the ESP32 v3.*.*でMCUFRIEND_kbv v3.0.0を使用する場合、mcufriend_shield.hの1026行目に以下を追加 */
   /* #include "hal/gpio_ll.h" */
   /* 参考：https://github.com/prenticedavid/MCUFRIEND_kbv/issues/255 */
   #include <MCUFRIEND_kbv.h>
   // #include <TouchScreen.h> /* 使用予定なし */
-#elif defined ( ESP32 )
+#elif defined (ESP32)
   #include <Adafruit_ILI9341.h>
-#elif defined ( ESP8266 )
+#elif defined (ESP8266)
   #include <Wire.h>
   #include <Adafruit_SSD1306.h>
 #endif
@@ -23,21 +23,23 @@
 #define TIME_FORMAT   "%d:%02d:%02d"   /* 時刻フォーマット */
 #define SENSOR_FORMAT "%2.0f%% %2.0f"  /* 温湿度フォーマット */
 
-#if defined ( ESP32 )
-#define LCD_COMMON_WIDTH  320          /* ILI9341 横幅 */
-#define LCD_COMMON_BLACK  0x0000       /* 黒 */
-#define LCD_COMMON_ORANGE 0xFD20       /* オレンジ */
-#elif defined ( ESP8266 )
+#if defined (ESP32)
+#define LCD_COMMON_WIDTH         320    /* ILI9341 横幅(320) */
+#define LCD_COMMON_BLACK         0x0000 /* 黒 */
+#define LCD_COMMON_ORANGE        0xFD20 /* オレンジ */
+#define LCD_COMMON_DEEPPINK      0xf892 /* ピンクといいつつ紫 */
+#define LCD_COMMON_DARKTURQUOISE 0x0679 /* ターコイズといいつつ水色 */
+#elif defined (ESP8266)
 #define LCD_COMMON_WIDTH  128          /* SSD1306 横幅 */
 #endif
 
 /* 関数定義 */
-extern void     LcdCommon_init( void );
-extern void     LcdCommon_init_fail( uint8_t flag );
-extern void     LcdCommon_draw_date( char *day_data, int weekday );
-extern void     LcdCommon_draw_weather( char *http_buff, char *sensor_data, uint8_t buff_length );
-extern void     LcdCommon_draw_time( char *time_data, uint8_t hour_digflg );
+extern void LcdCommon_init(void);
+extern void LcdCommon_init_fail(uint8_t flag);
+extern void LcdCommon_draw_date(char *day_data, int weekday);
+extern void LcdCommon_draw_weather(char *http_buff, char *sensor_data, uint8_t buff_length);
+extern void LcdCommon_draw_time(char *time_data, uint8_t hour_digflg);
 #if 0
-extern void     LcdCommon_wake( void );
+extern void LcdCommon_wake(void);
 #endif
-extern void     LcdCommon_sleep( void );
+extern void LcdCommon_sleep(void);
