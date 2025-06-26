@@ -34,6 +34,7 @@ void LcdCommon_init(void)
   lcd.setRotation(1);
 #elif defined (ESP32)
   /* LCDバックライトのPWM出力 */
+  ledcDetach(A4);          /* リセットを繰り返していると点灯しないことがある対策 */
   ledcAttach(A4, 6400, 8); /* IO32(A4)から6.4kHz、8bit分解能でPWM出力設定 */
   ledcWrite(A4, 128);      /* IO32(A4)からduty50%でPWM出力 */
   /* 制御開始 */
