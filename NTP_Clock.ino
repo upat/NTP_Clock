@@ -2,8 +2,8 @@
 #include "ComCommon.h"
 #include "LcdCommon.h"
 
-static char http_buff[BUFF_LENGTH] = {};    /* httpリクエスト用 */
-static char holiday_jdg[BUFF_LENGTH] = "1"; /* 休日の判定 1:スリープ不可, 0:スリープ許可 */
+static char getjma_buff[BUFF_LENGTH] = {};   /* get_jmaリクエスト用 */
+static char datelist_buff[BUFF_LENGTH] = {}; /* datelistリクエスト用 1:スリープ不可, 0:スリープ許可 */
 
 static void deepsleep_jdg(void);
 
@@ -26,14 +26,14 @@ void setup()
     /* NTP設定・取得 */
     timeData.ntp_init();
     /* 休日か判定 */
-    ComCommon_post_req(holiday_jdg, "datelist");
+    ComCommon_post_req(datelist_buff, "datelist");
     /* スリープ判定処理 */
     deepsleep_jdg();
 
     /* LCD初期化処理 */
     LcdCommon_init();
     /* データ取得 */
-    ComCommon_post_req(http_buff, HTTP_REQUEST);
+    ComCommon_post_req(getjma_buff, HTTP_REQUEST);
   }
 }
 
@@ -56,7 +56,7 @@ void loop()
       LcdCommon_draw_date(draw_data, timeData.weekday_d);
       /* 休日判定結果取得(初回のみsetup()で実施済みのため処理しない) */
       if (isnotfirst) {
-        ComCommon_post_req(holiday_jdg, "datelist");
+        ComCommon_post_req(datelist_buff, "datelist");
       }
       isnotfirst = true;
     }
@@ -64,10 +64,10 @@ void loop()
     if (timeData.min_updflg) {
       /* 温湿度/気圧描画処理 */
       sprintf(draw_data, SENSOR_FORMAT, dht.readHumidity(), dht.readTemperature());
-      LcdCommon_draw_weather(http_buff, draw_data, BUFF_LENGTH);
+      LcdCommon_draw_weather(getjma_buff, draw_data, BUFF_LENGTH);
       /* 毎時一桁目が2分の時、データ取得 */
       if (2 == timeData.min_dig) {
-        ComCommon_post_req(http_buff, HTTP_REQUEST);
+        ComCommon_post_req(getjma_buff, HTTP_REQUEST);
       }
     }
     /* 1秒毎タスク 時間描画処理 */
@@ -87,8 +87,8 @@ static void deepsleep_jdg(void)
   static bool isnotfirst = false; /* 起動時：false、通常動作中：true */
   if ((8 < timeData.hour_d) && (18 > timeData.hour_d)
    && (1 < timeData.weekday_d) && (7 > timeData.weekday_d)
-   && (0 == atoi(holiday_jdg))) {
-  //if( 10 == minute( now() ) && 0 == second( now() ) && 1 == atoi( holiday_jdg ) ) {
+   && (0 == atoi(datelist_buff))) {
+  //if( 10 == minute( now() ) && 0 == second( now() ) && 1 == atoi( datelist_buff ) ) {
     /* begin()前にSPIコマンドを送るとリセットループする対策 */
     if (isnotfirst) {
       LcdCommon_sleep(); /* LCDスリープ処理 */

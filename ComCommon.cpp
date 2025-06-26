@@ -1,7 +1,7 @@
 #include "ComCommon.h"
 
 /* 変数宣言 */
-static byte packetBuffer[NTP_PACKET_SIZE];
+static byte packetBuffer[NTP_PACKET_SIZE] = {};
 static WiFiUDP UDP_NTP;
 _FLAG err_flag;
 DHT dht(DHT_PIN, DHT11);
