@@ -1,14 +1,52 @@
 #include "ComCommon.h"
 
-static WiFiUDP UDP_NTP;
-
-/* 共用体宣言 */
-_FLAG err_flag;
 /* 変数宣言 */
 static byte packetBuffer[NTP_PACKET_SIZE];
+static WiFiUDP UDP_NTP;
+_FLAG err_flag;
 DHT dht(DHT_PIN, DHT11);
+TimeData timeData;
 /* 関数宣言 */
 static void sendNTPpacket(const char *address);
+
+/*******************************************************************/
+/* 処理内容：通信初期化・開始処理                                  */
+/* 引数　　：なし                                                  */
+/* 戻り値　：なし                                                  */
+/* 備考　　：なし                                                  */
+/*******************************************************************/
+void ComCommon_init(void)
+{
+  //Serial.begin(SERIAL_SPEED);   /* デバッグ用シリアル出力 */
+  err_flag.all_bits = 0xC0;       /* エラーフラグ(クリアは各制御で行う) */
+
+  /* wifi通信の開始 */
+  if ((WiFi.mode(WIFI_STA))                           /* 子機側に設定 */
+   && (WiFi.begin(AP_SSID, AP_PASS))                  /* wifi接続 */
+   && (WiFi.setTxPower(WIFI_POWER_7dBm))) {           /* wifi出力強度設定(『4dBm ≒ Bluetooth Class2相当』を参考に設定) */
+    for (uint8_t ms_cnt = 0; ms_cnt < 15; ms_cnt++) { /* wifiの接続待ち(1000ms*15回) */
+      delay(1000);
+      if (WiFi.status() == WL_CONNECTED) {            /* 平均5～7回で成功 */
+        flag_wifiinit_err = 0;                        /* 接続できたらフラグクリアしてループ終了 */
+        break;
+      } else {
+        /* 1s毎に切断後再接続 */
+        WiFi.disconnect();
+        WiFi.reconnect();
+      }
+    }
+  }
+
+  /* NTP用UDP通信の開始 */
+  if (UDP_NTP.begin(NTP_PORT)) {
+    flag_udpbegin_err = 0; /* 成功時 */
+  }
+
+  /* 温湿度センサとの通信開始 */
+  dht.begin();
+  
+  return;
+}
 
 /*******************************************************************/
 /* 処理内容：HTTPリクエスト処理                                    */
@@ -66,41 +104,68 @@ void ComCommon_post_req(char *response_data, String request_data)
 }
 
 /*******************************************************************/
-/* 処理内容：通信初期化・開始処理                                  */
+/* 処理内容：初回処理関数                                          */
 /* 引数　　：なし                                                  */
 /* 戻り値　：なし                                                  */
-/* 備考　　：なし                                                  */
+/* 備考　　：TimeDataクラス 公開関数                               */
 /*******************************************************************/
-void ComCommon_init(void)
-{
-  //Serial.begin(SERIAL_SPEED);   /* デバッグ用シリアル出力 */
-  err_flag.all_bits = 0xC0;       /* エラーフラグ(クリアは各制御で行う) */
+void TimeData::ntp_init(void) {
+  setSyncProvider(getNtpTime); /* 補正に使用する関数設定 */
+  setSyncInterval(21600);      /* 時刻補正を行う周期設定(秒) */
+  weekday_d = weekday(now());  /* 初回スリープ判定のため */
+  hour_d    = hour(now());
 
-  /* wifi通信の開始 */
-  if ((WiFi.mode(WIFI_STA))                           /* 子機側に設定 */
-   && (WiFi.begin(AP_SSID, AP_PASS))                  /* wifi接続 */
-   && (WiFi.setTxPower(WIFI_POWER_7dBm))) {           /* wifi出力強度設定(『4dBm ≒ Bluetooth Class2相当』を参考に設定) */
-    for (uint8_t ms_cnt = 0; ms_cnt < 15; ms_cnt++) { /* wifiの接続待ち(1000ms*15回) */
-      delay(1000);
-      if (WiFi.status() == WL_CONNECTED) {            /* 平均5～7回で成功 */
-        flag_wifiinit_err = 0;                        /* 接続できたらフラグクリアしてループ終了 */
-        break;
-      } else {
-        /* 1s毎に切断後再接続 */
-        WiFi.disconnect();
-        WiFi.reconnect();
-      }
-    }
+  return;
+}
+
+/*******************************************************************/
+/* 処理内容：更新チェック関数                                      */
+/* 引数　　：なし                                                  */
+/* 戻り値　：なし                                                  */
+/* 備考　　：TimeDataクラス 公開関数                               */
+/*******************************************************************/
+void TimeData::time_check(void) {
+  if ((timeStatus() != timeNotSet) && (now() != _now)) {
+    sec_updflg = true;
+    min_updflg = false;
+    day_updflg = false;
+    _time_update();
+  } else {
+    sec_updflg = false;
   }
 
-  /* NTP用UDP通信の開始 */
-  if (UDP_NTP.begin(NTP_PORT)) {
-    flag_udpbegin_err = 0; /* 成功時 */
+  return;
+}
+
+/*******************************************************************/
+/* 処理内容：更新関数                                              */
+/* 引数　　：なし                                                  */
+/* 戻り値　：なし                                                  */
+/* 備考　　：TimeDataクラス 非公開関数                             */
+/*******************************************************************/
+void TimeData::_time_update(void) {
+  _now = now();
+  if (day(_now) != day_d) {
+    day_updflg = true;
+  }
+  if (minute(_now) != minute_d) {
+    min_updflg = true;
+  }
+  year_d    = year(_now);
+  month_d   = month(_now);
+  day_d     = day(_now);
+  weekday_d = weekday(_now);
+  hour_d    = hour(_now);
+  minute_d  = minute(_now);
+  second_d  = second(_now);
+  min_dig   = minute_d % 10;
+
+  if (10 > hour_d) {
+    hour_dig = 1;
+  } else {
+    hour_dig = 0;
   }
 
-  /* 温湿度センサとの通信開始 */
-  dht.begin();
-  
   return;
 }
 

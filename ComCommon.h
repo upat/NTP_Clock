@@ -9,9 +9,11 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #endif
-
 #include <WiFiUDP.h>
+
 #include <DHT.h>
+#include <TimeLib.h>
+
 #include "CommonSetting.h"
 
 typedef struct flag_bits {
@@ -30,6 +32,30 @@ typedef union {
   uint8_t all_bits;
   _FB fb;
 } _FLAG;
+
+/* Timeライブラリから取得したデータを管理するクラス */
+class TimeData {
+  public:
+    uint16_t year_d;
+    uint8_t month_d;
+    uint8_t day_d;
+    uint8_t weekday_d;
+    uint8_t hour_d;
+    uint8_t minute_d;
+    uint8_t second_d;
+    uint8_t min_dig;    /* minuteの1桁目の数値 */
+    uint8_t hour_dig;   /* hourが1桁なら1それ以外0 */
+    bool    sec_updflg; /* 秒更新フラグ */
+    bool    min_updflg; /* 分更新フラグ 基本false、必要な時のみtrue */
+    bool    day_updflg; /* 日更新フラグ 基本false、必要な時のみtrue */
+
+    void ntp_init(void);   /* 初回処理関数 */
+    void time_check(void); /* 更新チェック関数 */
+  private:
+    time_t _now;
+
+    void _time_update(void); /* 更新関数 */
+};
 
 #define flag_wifiinit_err (err_flag.fb.bit8) /* wifi接続エラー判定フラグ */
 #define flag_udpbegin_err (err_flag.fb.bit7) /* udp接続エラー判定フラグ */
@@ -60,8 +86,9 @@ typedef union {
 /* 変数定義 */
 extern _FLAG err_flag;
 extern DHT dht;
+extern TimeData timeData;
 
 /* 関数定義 */
-extern void   ComCommon_post_req(char *response_data, String request_data);
 extern void   ComCommon_init(void);
+extern void   ComCommon_post_req(char *response_data, String request_data);
 extern time_t getNtpTime(void);
