@@ -3,9 +3,9 @@
 /* 変数宣言 */
 static byte packetBuffer[NTP_PACKET_SIZE] = {};
 static WiFiUDP UDP_NTP;
-_FLAG err_flag;
 DHT dht(DHT_PIN, DHT11);
 TimeData timeData;
+bool wifi_connect_error;
 /* 関数宣言 */
 static void sendNTPpacket(const char *address);
 
@@ -18,7 +18,7 @@ static void sendNTPpacket(const char *address);
 void ComCommon_init(void)
 {
   //Serial.begin(SERIAL_SPEED);   /* デバッグ用シリアル出力 */
-  err_flag.all_bits = 0xC0;       /* エラーフラグ(クリアは各制御で行う) */
+  wifi_connect_error = true;      /* エラーフラグ(クリアは各制御で行う) */
 
   /* wifi通信の開始 */
   if ((WiFi.mode(WIFI_STA))                           /* 子機側に設定 */
@@ -27,7 +27,7 @@ void ComCommon_init(void)
     for (uint8_t ms_cnt = 0; ms_cnt < 15; ms_cnt++) { /* wifiの接続待ち(1000ms*15回) */
       delay(1000);
       if (WiFi.status() == WL_CONNECTED) {            /* 平均5～7回で成功 */
-        flag_wifiinit_err = 0;                        /* 接続できたらフラグクリアしてループ終了 */
+        wifi_connect_error = false;                   /* 接続できたらフラグクリアしてループ終了 */
         break;
       } else {
         /* 1s毎に切断後再接続 */
@@ -38,10 +38,7 @@ void ComCommon_init(void)
   }
 
   /* NTP用UDP通信の開始 */
-  if (UDP_NTP.begin(NTP_PORT)) {
-    flag_udpbegin_err = 0; /* 成功時 */
-  }
-
+  UDP_NTP.begin(5000);
   /* 温湿度センサとの通信開始 */
   dht.begin();
   
@@ -50,21 +47,21 @@ void ComCommon_init(void)
 
 /*******************************************************************/
 /* 処理内容：HTTPリクエスト処理                                    */
-/* 引数　　：レスポンス受信用配列、リクエスト用文字列              */
+/* 引数　　：HttpPostBufポインタ                                   */
 /* 戻り値　：なし                                                  */
 /* 備考　　：なし                                                  */
 /*******************************************************************/
-void ComCommon_post_req(char *response_data, String request_data)
+void ComCommon_post_req(HttpPostBuf *buf_ptr)
 {
   HTTPClient http;
   int httpCode;
   uint8_t byte_count = 0;
 
   /* リクエストに対応した初期値のセット */
-  if (-1 < request_data.indexOf("date")) {       /* datelistリクエスト */
-    strcpy(response_data, "1");
-  } else if (-1 < request_data.indexOf("jma")) { /* get_jmaリクエスト */
-    strcpy(response_data, HTTP_DEFAULT);
+  if (NULL != strstr(buf_ptr->post_req, "date")) {       /* datelistリクエスト */
+    snprintf(buf_ptr->recv_buf, COM_BUFFER_SIZE, "%s", "1");
+  } else if (NULL != strstr(buf_ptr->post_req, "jma")) { /* get_jmaリクエスト */
+    snprintf(buf_ptr->recv_buf, COM_BUFFER_SIZE, "%s", HTTP_DEFAULT);
   }
 
   if (WiFi.status() != WL_CONNECTED) { /* wi-fi接続が切れていた場合再接続 */
@@ -76,7 +73,7 @@ void ComCommon_post_req(char *response_data, String request_data)
     /* 通信開始 */
     http.begin(HTTP_URL);
     http.addHeader("Content-Type", "application/text");
-    httpCode = http.POST(request_data);
+    httpCode = http.POST(String(buf_ptr->post_req));
 
     if (HTTP_CODE_OK == httpCode) {
       delay(20);    /* 環境依存でPOSTリクエストの後20ms待ち */
@@ -84,17 +81,17 @@ void ComCommon_post_req(char *response_data, String request_data)
       
       /* 受信データが1byte以上あり */
       while ((0 < stream->available())
-          && ((BUFF_LENGTH - 2) > byte_count)) { /* 配列インデックス+終端文字の分だけ引く */
-        char c_tmp = stream->read();             /* 1byteずつ読み出す */
-        if ((0x20 > c_tmp) || (0x7e < c_tmp)) {  /* ascii文字範囲外の場合はハイフンに置き換え */
-          response_data[byte_count] = '-';
+          && ((COM_BUFFER_SIZE - 2) > byte_count)) { /* 配列インデックス+終端文字の分だけ引く */
+        char c_tmp = stream->read();                  /* 1byteずつ読み出す */
+        if ((0x20 > c_tmp) || (0x7e < c_tmp)) {       /* ascii文字範囲外の場合はハイフンに置き換え */
+          buf_ptr->recv_buf[byte_count] = '-';
         } else {
-          response_data[byte_count] = c_tmp;
+          buf_ptr->recv_buf[byte_count] = c_tmp;
         }
-        byte_count++;                            /* 受信バイト数をカウント(最大22回想定) */
+        byte_count++;                                 /* 受信バイト数をカウント(最大22回想定) */
         delayMicroseconds(500);
       }
-      response_data[byte_count] = '\0';          /* 終端文字 */
+      buf_ptr->recv_buf[byte_count] = '\0';           /* 終端文字 */
     }
     /* 通信終了 */
     http.end();
@@ -151,20 +148,14 @@ void TimeData::_time_update(void) {
   if (minute(_now) != minute_d) {
     min_updflg = true;
   }
-  year_d    = year(_now);
-  month_d   = month(_now);
-  day_d     = day(_now);
-  weekday_d = weekday(_now);
-  hour_d    = hour(_now);
-  minute_d  = minute(_now);
-  second_d  = second(_now);
+  year_d    = (uint16_t)(year(_now));
+  month_d   = (uint8_t)(month(_now));
+  day_d     = (uint8_t)(day(_now));
+  weekday_d = (uint8_t)(weekday(_now));
+  hour_d    = (uint8_t)(hour(_now));
+  minute_d  = (uint8_t)(minute(_now));
+  second_d  = (uint8_t)(second(_now));
   min_dig   = minute_d % 10;
-
-  if (10 > hour_d) {
-    hour_dig = 1;
-  } else {
-    hour_dig = 0;
-  }
 
   return;
 }
@@ -174,7 +165,7 @@ time_t getNtpTime()
 {
   while (UDP_NTP.parsePacket() > 0); // discard any previously received packets
   // Serial.println( "Transmit NTP Request" );
-  sendNTPpacket(TIME_SERVER);
+  sendNTPpacket("ntp.nict.jp");                         /* NTPサーバーのドメイン名(IP指定は非推奨) */
   uint32_t beginWait = millis();
   while (millis() - beginWait < 1500) {
     int size = UDP_NTP.parsePacket();
@@ -187,7 +178,7 @@ time_t getNtpTime()
       secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
       secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)packetBuffer[43];
-      return secsSince1900 - 2208988800UL + TIME_ZONE * 3600;
+      return secsSince1900 - 2208988800UL + (9 * 3600); /* 9*3600s→日本のタイムゾーンに補正 */
     }
   }
   // Serial.println("No NTP Response :-(");

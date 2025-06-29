@@ -5,7 +5,6 @@ static const char week_day[7][8] = {"(SUN)", "(MON)", "(TUE)", "(WED)", "(THU)",
 
 /* 関数宣言 */
 static uint16_t str_position(uint16_t str_length, uint16_t unit_length);
-static uint16_t count_char(char *str, uint8_t str_size);
 
 #if defined (ESP32_8BIT)
 static MCUFRIEND_kbv lcd;
@@ -34,7 +33,6 @@ void LcdCommon_init(void)
   lcd.setRotation(1);
 #elif defined (ESP32)
   /* LCDバックライトのPWM出力 */
-  ledcDetach(A4);          /* リセットを繰り返していると点灯しないことがある対策 */
   ledcAttach(A4, 6400, 8); /* IO32(A4)から6.4kHz、8bit分解能でPWM出力設定 */
   ledcWrite(A4, 128);      /* IO32(A4)からduty50%でPWM出力 */
   /* 制御開始 */
@@ -55,7 +53,7 @@ void LcdCommon_init(void)
 /* 戻り値　：なし                                                  */
 /* 備考　　：ILI9341 SPI/ILI9341 8bit/SSD1306 I2C兼用              */
 /*******************************************************************/
-void LcdCommon_init_fail(uint8_t flag)
+void LcdCommon_init_fail(void)
 {
   /* LCD初期化処理 */
   LcdCommon_init();
@@ -64,26 +62,26 @@ void LcdCommon_init_fail(uint8_t flag)
   lcd.fillScreen(LCD_COMMON_BLACK); /* 画面表示のクリア */
   lcd.setTextSize(3);               /* 表示する文字サイズ */
   lcd.setCursor(0, 0);              /* 文字描画の開始位置 */
-  lcd.print("init_error:0x");       /* 文字のデータをセット */
-  lcd.println(flag, HEX);
+  lcd.println("wifi connect");      /* 文字のデータをセット */
+  lcd.println("error");
 #elif defined (ESP8266)
-  lcd.clearDisplay();               /* バッファのクリア */
+  lcd.clearDisplay();             /* バッファのクリア */
   lcd.setTextSize(1);             /* 表示する文字サイズ */
   lcd.setTextColor(WHITE, BLACK); /* 表示する文字の色(単色) */
   lcd.setCursor(0, 0);            /* 文字描画の開始位置 */
-  lcd.print("init error:0x");     /* 文字のデータをセット */
-  lcd.println(flag, HEX);
+  lcd.println("wifi connect");    /* 文字のデータをセット */
+  lcd.println("error");
   lcd.display();
 #endif
 }
 
 /*******************************************************************/
 /* 処理内容：日付/曜日描画処理                                     */
-/* 引数　　：日付文字列データ, Timelib算出曜日データ(int型)        */
+/* 引数　　：日付文字列データ, Timelib算出曜日データ               */
 /* 戻り値　：なし                                                  */
 /* 備考　　：ILI9341 SPI/ILI9341 8bit/SSD1306 I2C兼用              */
 /*******************************************************************/
-void LcdCommon_draw_date(char *day_data, int weekday)
+void LcdCommon_draw_date(char *day_data, uint8_t weekday)
 {
 #if defined (ESP32)
   lcd.setTextColor(LCD_COMMON_DARKTURQUOISE, LCD_COMMON_BLACK); /* 文字色・文字背景色設定 */
@@ -115,11 +113,11 @@ void LcdCommon_draw_date(char *day_data, int weekday)
 
 /*******************************************************************/
 /* 処理内容：温湿度/気圧描画処理                                   */
-/* 引数　　：httpリクエスト用データ, センサー読取データ, データ長  */
+/* 引数　　：DispBuf構造体(POST受信値)、DispBuf構造体(センサ値)    */
 /* 戻り値　：なし                                                  */
 /* 備考　　：ILI9341 SPI/ILI9341 8bit/SSD1306 I2C兼用              */
 /*******************************************************************/
-void LcdCommon_draw_weather(char *http_buff, char *sensor_data, uint8_t buff_length)
+void LcdCommon_draw_weather(DispBuf *postbuf, DispBuf *dispbuf)
 {
   static uint16_t httpstr_pre = 0;
   static uint16_t ssrstr_pre = 0;
@@ -134,8 +132,8 @@ void LcdCommon_draw_weather(char *http_buff, char *sensor_data, uint8_t buff_len
 #if defined (ESP32)
   lcd.setTextColor(LCD_COMMON_DARKTURQUOISE, LCD_COMMON_BLACK); /* 文字色・文字背景色設定 */
   /* 画面上の文字の長さ */
-  http_strlen = count_char(http_buff, buff_length) * 12;
-  sensor_strlen = count_char(sensor_data, buff_length) * 18;
+  http_strlen = (uint16_t)(postbuf->str_len * 12);
+  sensor_strlen = (uint16_t)(dispbuf->str_len * 18);
   /* 中央寄せに使用するカーソル開始位置 */
   http_cursor = str_position(http_strlen, 10);
   sensor_cursor = str_position(sensor_strlen, 18);
@@ -150,7 +148,7 @@ void LcdCommon_draw_weather(char *http_buff, char *sensor_data, uint8_t buff_len
   /* httpリクエストで取得した温湿度気圧のデータを描画(文字サイズ:2) */
   lcd.setTextSize(2);
   lcd.setCursor(http_cursor, 70);
-  lcd.println(http_buff);
+  lcd.println(postbuf->disp_buf);
 
   /* 温度単位をそれっぽく表示(文字サイズ:2) */
   lcd.setCursor(http_cursor + http_strlen + 6, 70);
@@ -160,7 +158,7 @@ void LcdCommon_draw_weather(char *http_buff, char *sensor_data, uint8_t buff_len
   /* 温湿度センサーのデータを描画(文字サイズ:3) */
   lcd.setTextSize(3);
   lcd.setCursor(sensor_cursor, 96);
-  lcd.println(sensor_data);
+  lcd.println(dispbuf->disp_buf);
 
   /* 温度単位をそれっぽく表示(文字サイズ:3) */
   lcd.setCursor(sensor_cursor + sensor_strlen + 8, 96);
@@ -170,8 +168,8 @@ void LcdCommon_draw_weather(char *http_buff, char *sensor_data, uint8_t buff_len
   lcd.setTextColor(LCD_COMMON_DEEPPINK, LCD_COMMON_BLACK); /* 文字色・文字背景色設定 */
 #elif defined (ESP8266)
   /* 画面上の文字の長さ */
-  http_strlen = count_char(http_buff, buff_length) * 6;
-  sensor_strlen = count_char(sensor_data, buff_length) * 12;
+  http_strlen = (uint16_t)(postbuf->str_len * 6);
+  sensor_strlen = (uint16_t)(dispbuf->str_len * 12);
   /* 中央寄せに使用するカーソル開始位置 */
   http_cursor = str_position(http_strlen, 10);
   sensor_cursor = str_position(sensor_strlen, 18);
@@ -186,7 +184,7 @@ void LcdCommon_draw_weather(char *http_buff, char *sensor_data, uint8_t buff_len
   /* httpリクエストで取得した温湿度気圧のデータを描画(文字サイズ:1) */
   lcd.setTextSize(1);
   lcd.setCursor(http_cursor, 10);
-  lcd.println(http_buff);
+  lcd.println(postbuf->disp_buf);
 
   /* 温度単位をそれっぽく表示(文字サイズ:1) */
   lcd.setCursor(http_cursor + http_strlen + 4, 10);
@@ -196,7 +194,7 @@ void LcdCommon_draw_weather(char *http_buff, char *sensor_data, uint8_t buff_len
   /* 温湿度のデータの描画(文字サイズ:2) */
   lcd.setTextSize(2);
   lcd.setCursor(sensor_cursor, 24);
-  lcd.println(sensor_data);
+  lcd.println(dispbuf->disp_buf);
 
   /* 温度単位をそれっぽく表示(文字サイズ:2) */
   lcd.setCursor(sensor_cursor + sensor_strlen + 6, 24);
@@ -207,25 +205,25 @@ void LcdCommon_draw_weather(char *http_buff, char *sensor_data, uint8_t buff_len
 
 /*******************************************************************/
 /* 処理内容：時間描画処理                                          */
-/* 引数　　：時間文字列データ, 時間桁数フラグ                      */
+/* 引数　　：DispBuf構造体                                         */
 /* 戻り値　：なし                                                  */
 /* 備考　　：ILI9341 SPI/ILI9341 8bit/SSD1306 I2C兼用              */
 /*******************************************************************/
-void LcdCommon_draw_time(char *time_data, uint8_t hour_digflg)
+void LcdCommon_draw_time(DispBuf *dispbuf)
 {
 #if defined (ESP32)
   /* 2桁時間→1桁時間のリフレッシュは日時変更時に行っている */
   /* 時間を描画(文字サイズ:6) */
   lcd.setTextSize(6);
-  lcd.setCursor(16 + (hour_digflg * 16), 160);
-  lcd.println(time_data);
+  lcd.setCursor((2 - (dispbuf->str_len - 7)) * 16, 160); /* 桁数に応じて表示を中心に寄せる調整 */
+  lcd.println(dispbuf->disp_buf);
 
 #elif defined (ESP8266)
   /* 2桁時間→1桁時間のリフレッシュは日時変更時に行っている */
   /* 時間を描画(文字サイズ:2) */
   lcd.setTextSize(2);
-  lcd.setCursor(16 + (hour_digflg * 6), 48);
-  lcd.println(time_data);
+  lcd.setCursor((2 - (dispbuf->str_len - 7)) * 6), 48);  /* 桁数に応じて表示を中心に寄せる調整 */
+  lcd.println(dispbuf->disp_buf);
 
   lcd.display();
 #endif
@@ -248,25 +246,6 @@ static uint16_t str_position(uint16_t str_length, uint16_t unit_length)
   half_strlen = str_length / 2;
 
   return (half_width - half_strlen);
-}
-
-/*******************************************************************/
-/* 処理内容：char型文字列の長さ算出処理                            */
-/* 引数　　：char型データ, sizeofで算出したchar型データのデータ長  */
-/* 戻り値　：char型文字列の長さ                                    */
-/* 備考　　：なし                                                  */
-/*******************************************************************/
-static uint16_t count_char(char *str, uint8_t str_size)
-{
-  uint16_t count = 0; /* 文字数カウンタ */
-  /* 終端文字を含めずにカウント */
-  for (count = 0; count < (uint16_t)str_size; count++) {
-    if ('\0' == str[count]) {
-      break; /* ループの終了位置=終端文字の配列インデックス=文字数 */
-    }
-  }
-
-  return count;
 }
 
 #if 0

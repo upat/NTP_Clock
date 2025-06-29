@@ -2,8 +2,8 @@
 #include "ComCommon.h"
 #include "LcdCommon.h"
 
-static char getjma_buff[BUFF_LENGTH] = {};   /* get_jmaリクエスト用 */
-static char datelist_buff[BUFF_LENGTH] = {}; /* datelistリクエスト用 1:スリープ不可, 0:スリープ許可 */
+static HttpPostBuf getjma_buf = {.post_req = HTTP_REQUEST}; /* get_jmaリクエスト用 */
+static HttpPostBuf datelist_buf = {.post_req = "datelist"}; /* datelistリクエスト用 1:スリープ不可, 0:スリープ許可 */
 
 static void deepsleep_jdg(void);
 
@@ -13,10 +13,10 @@ void setup()
   ComCommon_init();
 
   /* エラー判定処理 */
-  if (0x00 < err_flag.all_bits) {
+  if (wifi_connect_error) {
     /* 通信接続失敗時にリセットをかける */
     /* マイコン起動失敗時処理 */
-    LcdCommon_init_fail(err_flag.all_bits);
+    LcdCommon_init_fail();
 
     /* 処理を開始せずソフトウェアリセット */
     delay(1000);
@@ -26,21 +26,22 @@ void setup()
     /* NTP設定・取得 */
     timeData.ntp_init();
     /* 休日か判定 */
-    ComCommon_post_req(datelist_buff, "datelist");
+    ComCommon_post_req(&datelist_buf);
     /* スリープ判定処理 */
     deepsleep_jdg();
 
     /* LCD初期化処理 */
     LcdCommon_init();
     /* データ取得 */
-    ComCommon_post_req(getjma_buff, HTTP_REQUEST);
+    ComCommon_post_req(&getjma_buf);
   }
 }
 
 void loop()
 {
   uint32_t millis_count = millis(); /* 周期管理用 */
-  char draw_data[BUFF_LENGTH] = {}; /* 表示文字列を格納する配列 */
+  DispBuf dispbuf;                  /* 表示文字列・長さを格納する構造体 */
+  DispBuf postbuf;
   static bool isnotfirst = false;
 
   /* NTPから取得した時刻が設定済み且つ時刻が更新された時 */
@@ -52,27 +53,34 @@ void loop()
     /* 1日毎タスク */
     if (timeData.day_updflg) {
       /* 日付描画処理 */
-      sprintf(draw_data, DAY_FORMAT, timeData.year_d, timeData.month_d, timeData.day_d);
-      LcdCommon_draw_date(draw_data, timeData.weekday_d);
+      dispbuf.str_len = (uint8_t)snprintf(dispbuf.disp_buf, LCD_BUFFER_SIZE, DAY_FORMAT, timeData.year_d, timeData.month_d, timeData.day_d);
+      if (255 > dispbuf.str_len) {
+        LcdCommon_draw_date(dispbuf.disp_buf, timeData.weekday_d);
+      }
       /* 休日判定結果取得(初回のみsetup()で実施済みのため処理しない) */
       if (isnotfirst) {
-        ComCommon_post_req(datelist_buff, "datelist");
+        ComCommon_post_req(&datelist_buf);
       }
       isnotfirst = true;
     }
     /* 1分毎タスク処理 */
     if (timeData.min_updflg) {
       /* 温湿度/気圧描画処理 */
-      sprintf(draw_data, SENSOR_FORMAT, dht.readHumidity(), dht.readTemperature());
-      LcdCommon_draw_weather(getjma_buff, draw_data, BUFF_LENGTH);
+      dispbuf.str_len = (uint8_t)snprintf(dispbuf.disp_buf, LCD_BUFFER_SIZE, SENSOR_FORMAT, dht.readHumidity(), dht.readTemperature());
+      postbuf.str_len = (uint8_t)snprintf(postbuf.disp_buf, LCD_BUFFER_SIZE, "%s", getjma_buf.recv_buf); /* HttpPostBufのデータをDispBufへコピー */
+      if ((255 > dispbuf.str_len) && (255 > dispbuf.str_len)) {
+        LcdCommon_draw_weather(&postbuf, &dispbuf);
+      }
       /* 毎時一桁目が2分の時、データ取得 */
       if (2 == timeData.min_dig) {
-        ComCommon_post_req(getjma_buff, HTTP_REQUEST);
+        ComCommon_post_req(&getjma_buf);
       }
     }
     /* 1秒毎タスク 時間描画処理 */
-    sprintf(draw_data, TIME_FORMAT, timeData.hour_d, timeData.minute_d, timeData.second_d);
-    LcdCommon_draw_time(draw_data, timeData.hour_dig);
+    dispbuf.str_len = (uint8_t)snprintf(dispbuf.disp_buf, LCD_BUFFER_SIZE, TIME_FORMAT, timeData.hour_d, timeData.minute_d, timeData.second_d);
+    if (255 > dispbuf.str_len) {
+      LcdCommon_draw_time(&dispbuf);
+    }
   }
 
   /* ESP32+ILI9341(8bit)の起動時に最大250～260ms */
@@ -87,7 +95,7 @@ static void deepsleep_jdg(void)
   static bool isnotfirst = false; /* 起動時：false、通常動作中：true */
   if ((8 < timeData.hour_d) && (18 > timeData.hour_d)
    && (1 < timeData.weekday_d) && (7 > timeData.weekday_d)
-   && (0 == atoi(datelist_buff))) {
+   && (0 == atoi(datelist_buf.recv_buf))) {
   //if( 10 == minute( now() ) && 0 == second( now() ) && 1 == atoi( datelist_buff ) ) {
     /* begin()前にSPIコマンドを送るとリセットループする対策 */
     if (isnotfirst) {
