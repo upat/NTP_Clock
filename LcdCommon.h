@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-//#include "BitmapIcon.h"
+#include "CommonSetting.h"
 
 #include <SPI.h>
 #include <Adafruit_GFX.h>
