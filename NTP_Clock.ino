@@ -95,6 +95,7 @@ void loop()
 static void deepsleep_jdg(void)
 {
   static bool isnotfirst = false; /* 起動時：false、通常動作中：true */
+
   if ((8 < timeData.hour_d) && (18 > timeData.hour_d)
    && (1 < timeData.weekday_d) && (7 > timeData.weekday_d)
    && (0 == atoi(datelist_buf.recv_buf))) {
@@ -103,9 +104,10 @@ static void deepsleep_jdg(void)
     if (isnotfirst) {
       LcdCommon_sleep(); /* LCDスリープ処理 */
     }
+    ComCommon_sleep();   /* wifi切断 */
 #if defined (ESP32)
     /* deep-sleep */
-    esp_sleep_enable_timer_wakeup((uint32_t)(1800 * 1000 * 1000 * 1.006)); /* deep-sleepの誤差補正 1.006 */
+    esp_sleep_enable_timer_wakeup((uint32_t)(1800 * 1000 * 1000 * 1.006));  /* deep-sleepの誤差補正 1.006 */
     esp_deep_sleep_start();
 #elif defined (ESP8266)
     /* deep-sleep */

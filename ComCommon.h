@@ -73,4 +73,5 @@ extern bool wifi_connect_error;
 /* 関数定義 */
 extern void   ComCommon_init(void);
 extern void   ComCommon_post_req(HttpPostBuf *buf_ptr);
+extern void   ComCommon_sleep(void);
 extern time_t getNtpTime(void);
