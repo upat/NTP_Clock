@@ -1,10 +1,11 @@
 #pragma once
 
 #include <Arduino.h>
-#include "CommonSetting.h"
 
 #include <SPI.h>
 #include <Adafruit_GFX.h>
+
+#include "CommonSetting.h"
 
 #if defined (ESP32_8BIT)
   /* Arduino core for the ESP32 v3.*.*でMCUFRIEND_kbv v3.0.0を使用する場合、mcufriend_shield.hの1026行目に以下を追加 */
@@ -23,8 +24,6 @@
 #define TIME_FORMAT   "%d:%02d:%02d"    /* 時刻フォーマット */
 #define SENSOR_FORMAT "%2.0f%% %2.0f"   /* 温湿度フォーマット */
 
-#define LCD_BUFFER_SIZE          24     /* 画面表示用バッファサイズ */
-
 #if defined (ESP32)
 #define LCD_COMMON_WIDTH         320    /* ILI9341 横幅 */
 #define LCD_COMMON_BLACK         0x0000 /* 黒 */
@@ -37,8 +36,8 @@
 
 /* 画面表示に使用する構造体 */
 typedef struct {
-  uint8_t str_len;                /* 文字列の長さ≠バッファサイズ */
-  char disp_buf[LCD_BUFFER_SIZE]; /* 画面表示用バッファ */
+  uint8_t str_len;                 /* 文字列の長さ≠バッファサイズ */
+  char disp_buf[COMMON_BUFF_SIZE]; /* 画面表示用バッファ */
 } DispBuf;
 
 /* 関数定義 */

@@ -7,3 +7,6 @@
 
 /* ILI9341 8bitパラレルシールドを使用する場合定義 */
 //#define ESP32_8BIT
+
+/* POST受信・画面描画共用バッファサイズ */
+#define COMMON_BUFF_SIZE 24

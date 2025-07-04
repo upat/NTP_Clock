@@ -59,9 +59,9 @@ void ComCommon_post_req(HttpPostBuf *buf_ptr)
 
   /* リクエストに対応した初期値のセット */
   if (NULL != strstr(buf_ptr->post_req, "date")) {       /* datelistリクエスト */
-    snprintf(buf_ptr->recv_buf, COM_BUFFER_SIZE, "%s", "1");
+    snprintf(buf_ptr->recv_buf, COMMON_BUFF_SIZE, "%s", "1");
   } else if (NULL != strstr(buf_ptr->post_req, "jma")) { /* get_jmaリクエスト */
-    snprintf(buf_ptr->recv_buf, COM_BUFFER_SIZE, "%s", HTTP_DEFAULT);
+    snprintf(buf_ptr->recv_buf, COMMON_BUFF_SIZE, "%s", HTTP_DEFAULT);
   }
 
   if (WiFi.status() != WL_CONNECTED) { /* wi-fi接続が切れていた場合再接続 */
@@ -81,7 +81,7 @@ void ComCommon_post_req(HttpPostBuf *buf_ptr)
       
       /* 受信データが1byte以上あり */
       while ((0 < stream->available())
-          && ((COM_BUFFER_SIZE - 2) > byte_count)) { /* 配列インデックス+終端文字の分だけ引く */
+          && ((COMMON_BUFF_SIZE - 2) > byte_count)) { /* 配列インデックス+終端文字の分だけ引く */
         char c_tmp = stream->read();                  /* 1byteずつ読み出す */
         if ((0x20 > c_tmp) || (0x7e < c_tmp)) {       /* ascii文字範囲外の場合はハイフンに置き換え */
           buf_ptr->recv_buf[byte_count] = '-';

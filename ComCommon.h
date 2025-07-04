@@ -17,7 +17,6 @@
 #include "CommonSetting.h"
 
 #define NTP_PACKET_SIZE 48                   /* NTPサーバーとの通信で使用するパケットサイズ */
-#define COM_BUFFER_SIZE 24                   /* 通信用バッファサイズ */
 
 #if defined (ESP32_8BIT)
 #define SERIAL_SPEED 115200                  /* ESP32用シリアル通信ビットレート */
@@ -61,8 +60,8 @@ class TimeData {
 
 /* POSTリクエストで使用する構造体 */
 typedef struct {
-  char post_req[12];              /* POSTリクエスト文字列(最大9文字) */
-  char recv_buf[COM_BUFFER_SIZE]; /* 受信バッファ */
+  char post_req[12];               /* POSTリクエスト文字列(最大9文字) */
+  char recv_buf[COMMON_BUFF_SIZE]; /* 受信バッファ */
 } HttpPostBuf;
 
 /* 変数定義 */

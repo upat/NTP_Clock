@@ -53,10 +53,10 @@ void loop()
     /* 1日毎タスク */
     if (timeData.day_updflg) {
       /* 日付描画処理 */
-      dispbuf.str_len = (uint8_t)snprintf(dispbuf.disp_buf, LCD_BUFFER_SIZE, DAY_FORMAT, timeData.year_d, timeData.month_d, timeData.day_d);
+      dispbuf.str_len = (uint8_t)snprintf(dispbuf.disp_buf, COMMON_BUFF_SIZE, DAY_FORMAT, timeData.year_d, timeData.month_d, timeData.day_d);
       /* snprintfの戻り値は終端文字を除いた『書こうとした文字数』を返すため */
       /* 異常の場合は-1をuint8_tでキャストした値=255→バッファサイズ未満の時のみ描画処理実施 */
-      if (LCD_BUFFER_SIZE > dispbuf.str_len) {
+      if (COMMON_BUFF_SIZE > dispbuf.str_len) {
         LcdCommon_draw_date(dispbuf.disp_buf, timeData.weekday_d);
       }
       /* 休日判定結果取得(初回のみsetup()で実施済みのため処理しない) */
@@ -68,9 +68,9 @@ void loop()
     /* 1分毎タスク処理 */
     if (timeData.min_updflg) {
       /* 温湿度/気圧描画処理 */
-      dispbuf.str_len = (uint8_t)snprintf(dispbuf.disp_buf, LCD_BUFFER_SIZE, SENSOR_FORMAT, dht.readHumidity(), dht.readTemperature());
-      postbuf.str_len = (uint8_t)snprintf(postbuf.disp_buf, LCD_BUFFER_SIZE, "%s", getjma_buf.recv_buf); /* HttpPostBufのデータをDispBufへコピー */
-      if ((LCD_BUFFER_SIZE > dispbuf.str_len) && (LCD_BUFFER_SIZE > dispbuf.str_len)) {
+      dispbuf.str_len = (uint8_t)snprintf(dispbuf.disp_buf, COMMON_BUFF_SIZE, SENSOR_FORMAT, dht.readHumidity(), dht.readTemperature());
+      postbuf.str_len = (uint8_t)snprintf(postbuf.disp_buf, COMMON_BUFF_SIZE, "%s", getjma_buf.recv_buf); /* HttpPostBufのデータをDispBufへコピー */
+      if ((COMMON_BUFF_SIZE > dispbuf.str_len) && (COMMON_BUFF_SIZE > dispbuf.str_len)) {
         LcdCommon_draw_weather(&postbuf, &dispbuf);
       }
       /* 毎時一桁目が2分の時、データ取得 */
@@ -79,8 +79,8 @@ void loop()
       }
     }
     /* 1秒毎タスク 時間描画処理 */
-    dispbuf.str_len = (uint8_t)snprintf(dispbuf.disp_buf, LCD_BUFFER_SIZE, TIME_FORMAT, timeData.hour_d, timeData.minute_d, timeData.second_d);
-    if (LCD_BUFFER_SIZE > dispbuf.str_len) {
+    dispbuf.str_len = (uint8_t)snprintf(dispbuf.disp_buf, COMMON_BUFF_SIZE, TIME_FORMAT, timeData.hour_d, timeData.minute_d, timeData.second_d);
+    if (COMMON_BUFF_SIZE > dispbuf.str_len) {
       LcdCommon_draw_time(&dispbuf);
     }
   }
