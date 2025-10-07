@@ -79,19 +79,21 @@ void ComCommon_post_req(HttpPostBuf *buf_ptr)
       delay(20);    /* 環境依存でPOSTリクエストの後20ms待ち */
       WiFiClient *stream = http.getStreamPtr();
       
-      /* 受信データが1byte以上あり */
-      while ((0 < stream->available())
-          && ((COMMON_BUFF_SIZE - 2) > byte_count)) { /* 配列インデックス+終端文字の分だけ引く */
-        char c_tmp = stream->read();                  /* 1byteずつ読み出す */
-        if ((0x20 > c_tmp) || (0x7e < c_tmp)) {       /* ascii文字範囲外の場合はハイフンに置き換え */
-          buf_ptr->recv_buf[byte_count] = '-';
-        } else {
-          buf_ptr->recv_buf[byte_count] = c_tmp;
+      if (0 < stream->available()) {                    /* 通信失敗チェック(HTTP OKかつ受信データ無し) */
+        /* 受信データが1byte以上あり */
+        while ((0 < stream->available())
+            && ((COMMON_BUFF_SIZE - 2) > byte_count)) { /* 配列インデックス+終端文字の分だけ引く */
+          char c_tmp = stream->read();                  /* 1byteずつ読み出す */
+          if ((0x20 > c_tmp) || (0x7e < c_tmp)) {       /* ascii文字範囲外の場合はハイフンに置き換え */
+            buf_ptr->recv_buf[byte_count] = '-';
+          } else {
+            buf_ptr->recv_buf[byte_count] = c_tmp;
+          }
+          byte_count++;                                 /* 受信バイト数をカウント(最大22回想定) */
+          delayMicroseconds(500);
         }
-        byte_count++;                                 /* 受信バイト数をカウント(最大22回想定) */
-        delayMicroseconds(500);
+        buf_ptr->recv_buf[byte_count] = '\0';           /* 終端文字 */
       }
-      buf_ptr->recv_buf[byte_count] = '\0';           /* 終端文字 */
     }
     /* 通信終了 */
     http.end();
