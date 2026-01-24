@@ -122,8 +122,7 @@ void ComCommon_sleep(void)
 void TimeData::ntp_init(void) {
   setSyncProvider(getNtpTime); /* 補正に使用する関数設定 */
   setSyncInterval(21600);      /* 時刻補正を行う周期設定(秒) */
-  weekday_d = weekday(now());  /* 初回スリープ判定のため */
-  hour_d    = hour(now());
+  hour_d = hour(now());        /* 初回スリープ判定のため */
 
   return;
 }

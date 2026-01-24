@@ -96,8 +96,7 @@ static void deepsleep_jdg(void)
 {
   static bool isnotfirst = false; /* 起動時：false、通常動作中：true */
 
-  if ((8 < timeData.hour_d) && (18 > timeData.hour_d)
-   && (1 < timeData.weekday_d) && (7 > timeData.weekday_d)
+  if ((8 < timeData.hour_d) && (17 > timeData.hour_d)
    && (0 == atoi(datelist_buf.recv_buf))) {
   //if( 10 == minute( now() ) && 0 == second( now() ) && 1 == atoi( datelist_buff ) ) {
     /* begin()前にSPIコマンドを送るとリセットループする対策 */
