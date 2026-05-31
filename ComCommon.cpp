@@ -56,6 +56,7 @@ void ComCommon_post_req(HttpPostBuf *buf_ptr)
   HTTPClient http;
   int httpCode;
   uint8_t byte_count = 0;
+  char url[SEND_BUFF_SIZE];
 
   /* リクエストに対応した初期値のセット */
   if (NULL != strstr(buf_ptr->post_req, "date")) {       /* datelistリクエスト */
@@ -71,9 +72,9 @@ void ComCommon_post_req(HttpPostBuf *buf_ptr)
     /* タイムアウト時間の設定(ms) */
     http.setTimeout(100);
     /* 通信開始 */
-    http.begin(HTTP_URL);
-    http.addHeader("Content-Type", "application/text");
-    httpCode = http.POST(String(buf_ptr->post_req));
+    snprintf(url, SEND_BUFF_SIZE, "%s%s", HTTP_URL, buf_ptr->post_req); /* URL生成 */
+    http.begin(url);
+    httpCode = http.GET();
 
     if (HTTP_CODE_OK == httpCode) {
       delay(20);    /* 環境依存でPOSTリクエストの後20ms待ち */

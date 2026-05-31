@@ -17,6 +17,7 @@
 #include "CommonSetting.h"
 
 #define NTP_PACKET_SIZE 48                   /* NTPサーバーとの通信で使用するパケットサイズ */
+#define SEND_BUFF_SIZE  48                   /* HTTPリクエストの送信で使用するバッファサイズ */
 
 #if defined (ESP32_8BIT)
 #define SERIAL_SPEED 115200                  /* ESP32用シリアル通信ビットレート */
@@ -31,7 +32,7 @@
 #elif defined (ESP8266)
 #define SERIAL_SPEED 74880                   /* ESP8266用シリアル通信ビットレート */
 #define DHT_PIN 14                           /* DHT11 接続端子 */
-#define HTTP_REQUEST "get_jma_l"             /* ESP8266用HTTPリクエスト文字列 */
+#define HTTP_REQUEST "get_jma/?short="       /* ESP8266用HTTPリクエスト文字列 */
 #define HTTP_DEFAULT  "---%  ---.-"          /* ESP8266用HTTP受信データ初期値 */
 #endif
 

@@ -3,7 +3,7 @@
 #include "LcdCommon.h"
 
 static HttpPostBuf getjma_buf = {.post_req = HTTP_REQUEST}; /* get_jmaリクエスト用 */
-static HttpPostBuf datelist_buf = {.post_req = "datelist"}; /* datelistリクエスト用 1:スリープ不可, 0:スリープ許可 */
+static HttpPostBuf datelist_buf = {.post_req = "get_dl"};   /* get_dlリクエスト用 1:スリープ不可, 0:スリープ許可 */
 
 static void deepsleep_jdg(void);
 
