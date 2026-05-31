@@ -2,8 +2,8 @@
 #include "ComCommon.h"
 #include "LcdCommon.h"
 
-static HttpPostBuf getjma_buf = {.post_req = HTTP_REQUEST}; /* get_jmaリクエスト用 */
-static HttpPostBuf datelist_buf = {.post_req = "get_dl"};   /* get_dlリクエスト用 1:スリープ不可, 0:スリープ許可 */
+static HttpBuf getjma_buf = {.http_req = HTTP_REQUEST}; /* get_jmaリクエスト用 */
+static HttpBuf getdl_buf = {.http_req = "get_dl"};      /* get_dlリクエスト用 1:スリープ不可, 0:スリープ許可 */
 
 static void deepsleep_jdg(void);
 
@@ -26,14 +26,14 @@ void setup()
     /* NTP設定・取得 */
     timeData.ntp_init();
     /* 休日か判定 */
-    ComCommon_post_req(&datelist_buf);
+    ComCommon_http_req(&getdl_buf);
     /* スリープ判定処理 */
     deepsleep_jdg();
 
     /* LCD初期化処理 */
     LcdCommon_init();
     /* データ取得 */
-    ComCommon_post_req(&getjma_buf);
+    ComCommon_http_req(&getjma_buf);
   }
 }
 
@@ -41,7 +41,7 @@ void loop()
 {
   uint32_t millis_count = millis(); /* 周期管理用 */
   DispBuf dispbuf;                  /* 表示文字列・長さを格納する構造体 */
-  DispBuf postbuf;
+  DispBuf httpbuf;
   static bool isnotfirst = false;
 
   /* NTPから取得した時刻が設定済み且つ時刻が更新された時 */
@@ -61,7 +61,7 @@ void loop()
       }
       /* 休日判定結果取得(初回のみsetup()で実施済みのため処理しない) */
       if (isnotfirst) {
-        ComCommon_post_req(&datelist_buf);
+        ComCommon_http_req(&getdl_buf);
       }
       isnotfirst = true;
     }
@@ -69,13 +69,13 @@ void loop()
     if (timeData.min_updflg) {
       /* 温湿度/気圧描画処理 */
       dispbuf.str_len = (uint8_t)snprintf(dispbuf.disp_buf, COMMON_BUFF_SIZE, SENSOR_FORMAT, dht.readHumidity(), dht.readTemperature());
-      postbuf.str_len = (uint8_t)snprintf(postbuf.disp_buf, COMMON_BUFF_SIZE, "%s", getjma_buf.recv_buf); /* HttpPostBufのデータをDispBufへコピー */
+      httpbuf.str_len = (uint8_t)snprintf(httpbuf.disp_buf, COMMON_BUFF_SIZE, "%s", getjma_buf.recv_buf); /* HttpBufのデータをDispBufへコピー */
       if ((COMMON_BUFF_SIZE > dispbuf.str_len) && (COMMON_BUFF_SIZE > dispbuf.str_len)) {
-        LcdCommon_draw_weather(&postbuf, &dispbuf);
+        LcdCommon_draw_weather(&httpbuf, &dispbuf);
       }
       /* 毎時一桁目が2分の時、データ取得 */
       if (2 == timeData.min_dig) {
-        ComCommon_post_req(&getjma_buf);
+        ComCommon_http_req(&getjma_buf);
       }
     }
     /* 1秒毎タスク 時間描画処理 */
@@ -97,8 +97,8 @@ static void deepsleep_jdg(void)
   static bool isnotfirst = false; /* 起動時：false、通常動作中：true */
 
   if ((8 < timeData.hour_d) && (17 > timeData.hour_d)
-   && (0 == atoi(datelist_buf.recv_buf))) {
-  //if( 10 == minute( now() ) && 0 == second( now() ) && 1 == atoi( datelist_buff ) ) {
+   && (0 == atoi(getdl_buf.recv_buf))) {
+  //if (10 == minute(now()) && 0 == second(now()) && 1 == atoi(getdl_buf.recv_buf)) {
     /* begin()前にSPIコマンドを送るとリセットループする対策 */
     if (isnotfirst) {
       LcdCommon_sleep(); /* LCDスリープ処理 */

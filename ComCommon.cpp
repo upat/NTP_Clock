@@ -47,11 +47,11 @@ void ComCommon_init(void)
 
 /*******************************************************************/
 /* 処理内容：HTTPリクエスト処理                                    */
-/* 引数　　：HttpPostBufポインタ                                   */
+/* 引数　　：HttpBufポインタ                                       */
 /* 戻り値　：なし                                                  */
 /* 備考　　：なし                                                  */
 /*******************************************************************/
-void ComCommon_post_req(HttpPostBuf *buf_ptr)
+void ComCommon_http_req(HttpBuf *buf_ptr)
 {
   HTTPClient http;
   int httpCode;
@@ -59,9 +59,9 @@ void ComCommon_post_req(HttpPostBuf *buf_ptr)
   char url[SEND_BUFF_SIZE];
 
   /* リクエストに対応した初期値のセット */
-  if (NULL != strstr(buf_ptr->post_req, "dl")) {         /* get_dlリクエスト */
+  if (NULL != strstr(buf_ptr->http_req, "dl")) {         /* get_dlリクエスト */
     snprintf(buf_ptr->recv_buf, COMMON_BUFF_SIZE, "%s", "1");
-  } else if (NULL != strstr(buf_ptr->post_req, "jma")) { /* get_jmaリクエスト */
+  } else if (NULL != strstr(buf_ptr->http_req, "jma")) { /* get_jmaリクエスト */
     snprintf(buf_ptr->recv_buf, COMMON_BUFF_SIZE, "%s", HTTP_DEFAULT);
   }
 
@@ -72,12 +72,12 @@ void ComCommon_post_req(HttpPostBuf *buf_ptr)
     /* タイムアウト時間の設定(ms) */
     http.setTimeout(100);
     /* 通信開始 */
-    snprintf(url, SEND_BUFF_SIZE, "%s%s", HTTP_URL, buf_ptr->post_req); /* URL生成 */
+    snprintf(url, SEND_BUFF_SIZE, "%s%s", HTTP_URL, buf_ptr->http_req); /* URL生成 */
     http.begin(url);
     httpCode = http.GET();
 
     if (HTTP_CODE_OK == httpCode) {
-      delay(20);    /* 環境依存でPOSTリクエストの後20ms待ち */
+      delay(20);    /* 環境依存でHTTPリクエストの後20ms待ち */
       WiFiClient *stream = http.getStreamPtr();
       
       if (0 < stream->available()) {                    /* 通信失敗チェック(HTTP OKかつ受信データ無し) */

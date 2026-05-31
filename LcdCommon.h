@@ -43,6 +43,6 @@ typedef struct {
 extern void LcdCommon_init(void);
 extern void LcdCommon_init_fail(void);
 extern void LcdCommon_draw_date(char *day_data, uint8_t weekday);
-extern void LcdCommon_draw_weather(DispBuf *postbuf, DispBuf *dispbuf);
+extern void LcdCommon_draw_weather(DispBuf *httpbuf, DispBuf *dispbuf);
 extern void LcdCommon_draw_time(DispBuf *dispbuf);
 extern void LcdCommon_sleep(void);

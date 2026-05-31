@@ -111,11 +111,11 @@ void LcdCommon_draw_date(char *day_data, uint8_t weekday)
 
 /*******************************************************************/
 /* 処理内容：温湿度/気圧描画処理                                   */
-/* 引数　　：DispBuf構造体(POST受信値)、DispBuf構造体(センサ値)    */
+/* 引数　　：DispBuf構造体(HTTP受信値)、DispBuf構造体(センサ値)    */
 /* 戻り値　：なし                                                  */
 /* 備考　　：ILI9341 SPI/ILI9341 8bit/SSD1306 I2C兼用              */
 /*******************************************************************/
-void LcdCommon_draw_weather(DispBuf *postbuf, DispBuf *dispbuf)
+void LcdCommon_draw_weather(DispBuf *httpbuf, DispBuf *dispbuf)
 {
   static uint16_t httpstr_pre = 0;
   static uint16_t ssrstr_pre = 0;
@@ -130,7 +130,7 @@ void LcdCommon_draw_weather(DispBuf *postbuf, DispBuf *dispbuf)
 #if defined (ESP32)
   lcd.setTextColor(LCD_COMMON_DARKTURQUOISE, LCD_COMMON_BLACK); /* 文字色・文字背景色設定 */
   /* 画面上の文字の長さ */
-  http_strlen = (uint16_t)(postbuf->str_len * 12);
+  http_strlen = (uint16_t)(httpbuf->str_len * 12);
   sensor_strlen = (uint16_t)(dispbuf->str_len * 18);
   /* 中央寄せに使用するカーソル開始位置 */
   http_cursor = str_position(http_strlen, 10);
@@ -146,7 +146,7 @@ void LcdCommon_draw_weather(DispBuf *postbuf, DispBuf *dispbuf)
   /* httpリクエストで取得した温湿度気圧のデータを描画(文字サイズ:2) */
   lcd.setTextSize(2);
   lcd.setCursor(http_cursor, 70);
-  lcd.println(postbuf->disp_buf);
+  lcd.println(httpbuf->disp_buf);
 
   /* 温度単位をそれっぽく表示(文字サイズ:2) */
   lcd.setCursor(http_cursor + http_strlen + 6, 70);
@@ -166,7 +166,7 @@ void LcdCommon_draw_weather(DispBuf *postbuf, DispBuf *dispbuf)
   lcd.setTextColor(LCD_COMMON_DEEPPINK, LCD_COMMON_BLACK); /* 文字色・文字背景色設定 */
 #elif defined (ESP8266)
   /* 画面上の文字の長さ */
-  http_strlen = (uint16_t)(postbuf->str_len * 6);
+  http_strlen = (uint16_t)(httpbuf->str_len * 6);
   sensor_strlen = (uint16_t)(dispbuf->str_len * 12);
   /* 中央寄せに使用するカーソル開始位置 */
   http_cursor = str_position(http_strlen, 10);
@@ -182,7 +182,7 @@ void LcdCommon_draw_weather(DispBuf *postbuf, DispBuf *dispbuf)
   /* httpリクエストで取得した温湿度気圧のデータを描画(文字サイズ:1) */
   lcd.setTextSize(1);
   lcd.setCursor(http_cursor, 10);
-  lcd.println(postbuf->disp_buf);
+  lcd.println(httpbuf->disp_buf);
 
   /* 温度単位をそれっぽく表示(文字サイズ:1) */
   lcd.setCursor(http_cursor + http_strlen + 4, 10);

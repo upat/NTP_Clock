@@ -59,11 +59,11 @@ class TimeData {
     void _time_update(void); /* 更新関数 */
 };
 
-/* POSTリクエストで使用する構造体 */
+/* HTTPリクエストで使用する構造体 */
 typedef struct {
-  char post_req[12];               /* POSTリクエスト文字列(最大9文字) */
+  char http_req[12];               /* HTTPリクエスト文字列(最大9文字) */
   char recv_buf[COMMON_BUFF_SIZE]; /* 受信バッファ */
-} HttpPostBuf;
+} HttpBuf;
 
 /* 変数定義 */
 extern DHT dht;
@@ -72,6 +72,6 @@ extern bool wifi_connect_error;
 
 /* 関数定義 */
 extern void   ComCommon_init(void);
-extern void   ComCommon_post_req(HttpPostBuf *buf_ptr);
+extern void   ComCommon_http_req(HttpBuf *buf_ptr);
 extern void   ComCommon_sleep(void);
 extern time_t getNtpTime(void);
