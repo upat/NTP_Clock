@@ -8,8 +8,6 @@ static uint16_t str_position(uint16_t str_length, uint16_t unit_length);
 
 #if defined (ESP32_8BIT)
 static MCUFRIEND_kbv lcd;
-/* TouchScreen ts(XP, YP, XM, YM, 300); */
-// TouchScreen ts(27, 4, 15, 14, 300); /* 使用予定なし */
 #elif defined (ESP32)
 static Adafruit_ILI9341 lcd = Adafruit_ILI9341(5, 17, 16); /* CS, DC, RESET */
 #elif defined (ESP8266)
@@ -247,26 +245,6 @@ static uint16_t str_position(uint16_t str_length, uint16_t unit_length)
 
   return (half_width - half_strlen);
 }
-
-#if 0
-/*******************************************************************/
-/* 処理内容：LCDウェイク処理                                       */
-/* 引数　　：なし                                                  */
-/* 戻り値　：なし                                                  */
-/* 備考　　：ILI9341 SPI用(リセットで起こすため未使用)             */
-/*******************************************************************/
-void LcdCommon_wake(void)
-{
-  lcd.startWrite();
-  
-  lcd.writeCommand(ILI9341_SLPOUT);
-  delay(120);
-  lcd.writeCommand(ILI9341_DISPON);
-  delay(20);
-
-  lcd.endWrite();
-}
-#endif
 
 /*******************************************************************/
 /* 処理内容：LCDスリープ処理                                       */

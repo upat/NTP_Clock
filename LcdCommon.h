@@ -12,7 +12,6 @@
   /* #include "hal/gpio_ll.h" */
   /* 参考：https://github.com/prenticedavid/MCUFRIEND_kbv/issues/255 */
   #include <MCUFRIEND_kbv.h>
-  // #include <TouchScreen.h> /* 使用予定なし */
 #elif defined (ESP32)
   #include <Adafruit_ILI9341.h>
 #elif defined (ESP8266)
@@ -46,7 +45,4 @@ extern void LcdCommon_init_fail(void);
 extern void LcdCommon_draw_date(char *day_data, uint8_t weekday);
 extern void LcdCommon_draw_weather(DispBuf *postbuf, DispBuf *dispbuf);
 extern void LcdCommon_draw_time(DispBuf *dispbuf);
-#if 0
-extern void LcdCommon_wake(void);
-#endif
 extern void LcdCommon_sleep(void);
