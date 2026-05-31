@@ -8,13 +8,13 @@ ESP系マイコンと画面表示モジュール、温湿度センサーモジ�
 ---
 - 一定時間毎にNTPサーバーと通信し、自動で時刻合わせ
 - 消費電力削減のため、日中に自動でスリープ
-- [ローカルサーバー](https://github.com/upat/PyWeather-Server)と通信を行い、最新の気象データを取得し表示
+- [簡易HTTPサーバー](https://github.com/upat/PyWeather-Server)と通信を行い、最新の気象データを取得し表示
 
 開発・動作環境
 ---
 - 使用ボード
-    - ESP32-DevKitC V2
-    - WeMos D1
+    - ESP32-DevKitC V2(esp32 by Espressif Systems 3.1.3)
+    - WeMos D1(現在未使用)
 - 画面表示モジュール
     - ILI9341(SPI or 8bitパラレル)
     - SSD1306(I2C)
@@ -22,21 +22,27 @@ ESP系マイコンと画面表示モジュール、温湿度センサーモジ�
     - DHT11
 - Arduino IDE 2.3.6(使用ライブラリ)
     - ESP32-DevKitC V2 + ILI9341(SPI) + DHT11 使用時
-        - Adafruit_GFX_Library 1.12.1
-        - Adafruit_ILI9341 1.6.2
-        - DHT_sensor_library 1.4.6
-        - Time(Arduino Time Library) 1.6.1
+        | Library | Version |
+        |---------|---------|
+        | Adafruit_GFX_Library | 1.12.1 |
+        | Adafruit_ILI9341 | 1.6.2 |
+        | DHT_sensor_library | 1.4.6 |
+        | Time(Arduino Time Library) | 1.6.1 |
     - ESP32-DevKitC V2 + ILI9341(8bitパラレル) + DHT11 使用時
-        - Adafruit_GFX_Library 1.12.1
-        - MCUFRIEND_kbv 3.0.0-Release
-        - DHT_sensor_library 1.4.6
-        - Time(Arduino Time Library) 1.6.1
+        | Library | Version |
+        |---------|---------|
+        | Adafruit_GFX_Library | 1.12.1 |
+        | MCUFRIEND_kbv | 3.0.0-Release |
+        | DHT_sensor_library | 1.4.6 |
+        | Time(Arduino Time Library) | 1.6.1 |
     - WeMos D1 + SSD1306(I2C) + DHT11 使用時
-        - Adafruit_GFX_Library
-        - Adafruit_SSD1306
-        - DHT_sensor_library
-        - Time
-- ローカルサーバー
+        | Library | Version |
+        |---------|---------|
+        | Adafruit_GFX_Library | 1.12.1 |
+        | Adafruit_SSD1306 | 2.5.14 |
+        | DHT_sensor_library | 1.4.6 |
+        | Time(Arduino Time Library) | 1.6.1 |
+- 簡易HTTPサーバー
     - [PyWeather-Server](https://github.com/upat/PyWeather-Server)
 
 使い方(配線例)
@@ -58,12 +64,10 @@ WeMos D1+SSD1306(I2C)+DHT11 使用時
 
 ファイル構成
 ---
-- LICENCE
+- LICENSE
     - ライセンスファイル
 - README.md
     - このファイル
-- BitmapIcon
-    - タッチパネル機能のため用意(未使用)
 - ComCommon
     - 画面表示モジュール以外の通信関連の処理
 - LcdCommon
@@ -80,4 +84,4 @@ WeMos D1+SSD1306(I2C)+DHT11 使用時
 
 ライセンス
 ---
-MIT Licence
+MIT License
