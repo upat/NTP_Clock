@@ -59,7 +59,7 @@ void ComCommon_post_req(HttpPostBuf *buf_ptr)
   char url[SEND_BUFF_SIZE];
 
   /* リクエストに対応した初期値のセット */
-  if (NULL != strstr(buf_ptr->post_req, "date")) {       /* datelistリクエスト */
+  if (NULL != strstr(buf_ptr->post_req, "dl")) {         /* get_dlリクエスト */
     snprintf(buf_ptr->recv_buf, COMMON_BUFF_SIZE, "%s", "1");
   } else if (NULL != strstr(buf_ptr->post_req, "jma")) { /* get_jmaリクエスト */
     snprintf(buf_ptr->recv_buf, COMMON_BUFF_SIZE, "%s", HTTP_DEFAULT);
