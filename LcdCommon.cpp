@@ -31,11 +31,11 @@ void LcdCommon_init(void)
   lcd.setRotation(1);
 #elif defined (ESP32)
   /* 制御開始 */
-  lcd.begin(10000000);
+  lcd.begin();
   lcd.setRotation(1);
   /* LCDバックライトのPWM出力 */
   ledcAttach(A4, 6400, 8); /* IO32(A4)から6.4kHz、8bit分解能でPWM出力設定 */
-  ledcWrite(A4, 128);      /* IO32(A4)からduty50%でPWM出力 */
+  ledcWrite(A4, 64);       /* IO32(A4)からduty25%でPWM出力 */
 #elif defined (ESP8266)
   /* 制御開始 */
   lcd.begin(SSD1306_EXTERNALVCC, 0x3C);
