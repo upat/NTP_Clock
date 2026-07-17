@@ -70,7 +70,7 @@ void loop()
       /* 温湿度/気圧描画処理 */
       dispbuf.str_len = (uint8_t)snprintf(dispbuf.disp_buf, COMMON_BUFF_SIZE, SENSOR_FORMAT, dht.readHumidity(), dht.readTemperature());
       httpbuf.str_len = (uint8_t)snprintf(httpbuf.disp_buf, COMMON_BUFF_SIZE, "%s", getjma_buf.recv_buf); /* HttpBufのデータをDispBufへコピー */
-      if ((COMMON_BUFF_SIZE > dispbuf.str_len) && (COMMON_BUFF_SIZE > dispbuf.str_len)) {
+      if ((COMMON_BUFF_SIZE > dispbuf.str_len) && (COMMON_BUFF_SIZE > httpbuf.str_len)) {
         LcdCommon_draw_weather(&httpbuf, &dispbuf);
       }
       /* 毎時一桁目が2分の時、データ取得 */
